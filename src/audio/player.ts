@@ -78,7 +78,10 @@ export async function playScript(
           step.chords.map((notes) => ({ notes })),
           { bpm: step.bpm, beatsPerChord: step.beatsPerChord, pattern: 'once' },
         );
-        if (playback.started) await playback.done;
+        // A context that never advances (a headless browser, a muted tab on
+        // some devices) would leave `done` pending; the step's own length is
+        // the ceiling, so the session always goes on to listening.
+        if (playback.started) await Promise.race([playback.done, sleep(stepMs(step) + 500)]);
         else await sleep(stepMs(step));
         break;
       }

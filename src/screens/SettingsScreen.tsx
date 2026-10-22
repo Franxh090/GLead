@@ -19,6 +19,7 @@ function Toggle({
         type="button"
         role="switch"
         aria-checked={value}
+        aria-label={label}
         className={`${styles.button} ${value ? styles.primary : ''}`}
         onClick={() => onChange(!value)}
       >
