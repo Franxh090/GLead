@@ -1,0 +1,150 @@
+.shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--space-4) + var(--safe-top)) var(--space-4)
+    calc(var(--space-6) + var(--safe-bottom));
+  max-width: 64rem;
+  margin: 0 auto;
+  gap: var(--space-4);
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-right: auto;
+  color: var(--accent);
+}
+
+.navButton,
+.button,
+.choice {
+  min-height: var(--tap);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  cursor: pointer;
+}
+
+.navButton[aria-current='page'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.button {
+  font-weight: 600;
+}
+
+.primary {
+  background: var(--accent-fill);
+  color: var(--accent-text);
+  border-color: transparent;
+}
+
+.button:disabled,
+.choice:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.choice {
+  font-size: 1.25rem;
+  font-weight: 700;
+  min-height: 3.5rem;
+}
+
+.status {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.ok {
+  color: var(--correct);
+}
+
+.bad {
+  color: var(--wrong);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+.big {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 5rem;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  color: var(--text);
+  padding: var(--space-2);
+  font: inherit;
+}
+
+.neck {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .choices {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

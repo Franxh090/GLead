@@ -37,7 +37,10 @@ export default defineConfig({
   build: { target: 'es2022', sourcemap: true },
   test: {
     projects: [
-      { extends: true, test: { name: 'dom', environment: 'jsdom', include: ['src/**/*.test.tsx'] } },
+      {
+        extends: true,
+        test: { name: 'dom', environment: 'jsdom', include: ['src/**/*.test.tsx'] },
+      },
       { extends: true, test: { name: 'node', environment: 'node', include: ['src/**/*.test.ts'] } },
     ],
     testTimeout: 20_000,
