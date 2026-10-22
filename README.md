@@ -21,8 +21,21 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Early development (Sprint 0–1). See `docs/implementation-plan.md` for the
-sprint plan and `docs/prd-concise.md` for the product definition.
+Sprint 1 of the plan in `docs/implementation-plan.md`. What works today:
+
+- **B1 "Scale degree in key"**: a cadence sets the key (any of six practised
+  majors or minors, rotating every trial), one note sounds, and you play it
+  back on your guitar through the microphone or tap its degree. Feedback on
+  the neck, a confirm prompt when the detector is unsure, misses come back a
+  few trials later, FSRS schedules each degree.
+- Sessions of 5, 10 or 20 minutes; an end-of-session reflection; a Progress
+  screen that leads with delayed and transfer results (empty until retests
+  arrive in Sprint 3) and exports everything as JSON.
+- 615 unit tests and 5 Playwright specs (`pnpm e2e`) pass.
+
+Not yet: B2–B7, the play-along drills (C1–C3), placement, retests, the
+dashboard proper. The mic confidence threshold is provisional until R2
+measures real guitars on real phones.
 
 ## Run it locally
 
@@ -32,6 +45,7 @@ Node 22+ and pnpm.
 pnpm install
 pnpm dev        # http://localhost:5173
 pnpm verify     # typecheck, lint, format, unit tests, build
+pnpm e2e        # Playwright, against a production build
 ```
 
 Mic drills need HTTPS or `localhost` (browsers only grant the microphone in a

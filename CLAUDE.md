@@ -20,7 +20,7 @@ product definition is `docs/prd-concise.md`; the evidence behind it is
 | `pnpm dev` | Vite dev server |
 | `pnpm verify` | typecheck, lint, format check, unit tests, build |
 | `pnpm test` | unit tests (Vitest; `.test.tsx` in jsdom, `.test.ts` in node) |
-| `pnpm e2e` | Playwright (once specs exist) |
+| `pnpm e2e` | Playwright against a production build; the fake mic is `window.__gleadFakeMic` (see `e2e/helpers.ts`) |
 
 ## Layout (`src/`)
 
