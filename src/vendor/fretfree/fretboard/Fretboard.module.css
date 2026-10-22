@@ -1,0 +1,183 @@
+.neck {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.wood {
+  fill: var(--wood);
+  stroke: var(--wood-dark);
+  stroke-width: 2;
+}
+
+.inlay {
+  fill: var(--inlay);
+  opacity: 0.55;
+}
+
+.nut {
+  fill: #efe6d6;
+}
+
+.wire {
+  stroke: var(--fret-wire);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.string {
+  stroke: var(--string);
+  opacity: 0.9;
+}
+
+.dim {
+  fill: var(--dim);
+  pointer-events: none;
+}
+
+.fretNumber,
+.stringName {
+  fill: var(--text-muted);
+  font-size: 15px;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* The names sit on the wood, which doesn't change with the theme, so they use
+   a neck token, not page text. A wood halo keeps the string line out of the
+   glyphs (4.5:1, Fretboard.contrast.test.ts). */
+.stringName {
+  fill: var(--inlay);
+  font-weight: 600;
+  stroke: var(--wood);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.stringNameDimmed {
+  stroke: none;
+}
+
+.marker {
+  pointer-events: none;
+}
+
+/* A shape's outline (guide levels 2–3): a dashed box on the wood, in a neck token. */
+.outline {
+  fill: none;
+  stroke: var(--inlay);
+  stroke-width: 2.5;
+  stroke-dasharray: 8 5;
+  pointer-events: none;
+}
+
+.marker text {
+  font-size: 17px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: #10141a;
+}
+
+.target circle {
+  fill: var(--tone);
+  stroke: #fff;
+  stroke-width: 3;
+  animation: pulse 1.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.root rect {
+  fill: var(--root);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.tone circle {
+  fill: var(--tone);
+}
+
+.ghost circle {
+  fill: none;
+  stroke: var(--inlay);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+  opacity: 0.7;
+}
+
+.correct circle {
+  fill: var(--correct);
+  stroke: #fff;
+  stroke-width: 3;
+  animation: flash 0.35s ease-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.correct text,
+.wrong text {
+  fill: #fff;
+}
+
+.wrong rect {
+  fill: var(--wrong);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.hit {
+  fill: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.hit:focus-visible {
+  fill: rgb(86 180 233 / 0.25);
+  stroke: var(--tone);
+  stroke-width: 2;
+}
+
+@media (hover: hover) {
+  .hit[role='button']:hover {
+    fill: rgb(255 255 255 / 0.07);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes flash {
+  from {
+    transform: scale(1.4);
+  }
+}
+
+/* A labelled guide note sits on the bare wood, so its text is light. */
+.ghost text {
+  fill: var(--inlay);
+}
+
+/* Chord tones by degree (Explore, D37): colour and shape both differ. */
+.third circle {
+  fill: var(--tone);
+}
+
+.fifth polygon {
+  fill: var(--chord-fifth);
+}
+
+.seventh polygon {
+  fill: var(--chord-seventh);
+}
+
+.marker text.longLabel {
+  font-size: 13px;
+}
