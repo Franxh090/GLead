@@ -34,6 +34,7 @@ import type {
   InputEvent,
   Item,
   RetestKind,
+  SessionPurpose,
   TrialEvent,
 } from '../types';
 
@@ -88,6 +89,8 @@ export interface RunnerDeps {
   rng(): number;
   retest?: RetestKind;
   tuning: DrillContext['tuning'];
+  /** Why the session runs; placement and retests measure only (no retries, no card updates). */
+  purpose?: SessionPurpose;
 }
 
 export interface SessionRunner {
@@ -193,13 +196,16 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
       speedTargets(null),
     );
     const now = deps.now();
-    const card = deps.scheduler.review(
-      cards.get(entry.item.id) ?? deps.scheduler.newCard(entry.item, now),
-      rating,
-      now,
-    );
-    cards.set(entry.item.id, card);
-    void deps.repo.saveCard(card);
+    const purpose = deps.purpose ?? 'practice';
+    if (purpose === 'practice') {
+      const card = deps.scheduler.review(
+        cards.get(entry.item.id) ?? deps.scheduler.newCard(entry.item, now),
+        rating,
+        now,
+      );
+      cards.set(entry.item.id, card);
+      void deps.repo.saveCard(card);
+    }
 
     const trial: TrialEvent = {
       trialId: newId('t', deps.rng),
@@ -221,10 +227,11 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
       experimentArm: deps.settings.experimentArm,
       retest: deps.retest ?? 'none',
       unseenKey: isUnseenKey(key),
+      purpose,
     };
     void deps.repo.logTrial(trial);
 
-    if (!check.correct && entry.kind !== 'retry') {
+    if (!check.correct && entry.kind !== 'retry' && purpose === 'practice') {
       const at = retryIndex(state.index + 1, plan.length - state.index - 1);
       plan.splice(at, 0, { item: entry.item, kind: 'retry' });
     }

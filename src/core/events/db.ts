@@ -5,7 +5,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { GuideLevel, Handedness } from '../../vendor/fretfree/engine/model';
 import type { AccidentalPref } from '../../vendor/fretfree/theory';
-import type { CardRecord, LabelScheme, SessionRecord, TrialEvent } from '../types';
+import type { CardRecord, LabelScheme, RetestRecord, SessionRecord, TrialEvent } from '../types';
 
 export interface Settings {
   key: 'singleton';
@@ -53,6 +53,13 @@ export const SCHEMA_VERSIONS: readonly { version: number; stores: Record<string,
       sessions: '++id, sessionId, startedAt',
     },
   },
+  {
+    // Sprint 3 (PRD D3): retests scheduled per skill.
+    version: 2,
+    stores: {
+      retests: '++id, skillId, dueAt, doneAt',
+    },
+  },
 ];
 
 export class GLeadDB extends Dexie {
@@ -60,6 +67,7 @@ export class GLeadDB extends Dexie {
   cards!: EntityTable<CardRecord, 'itemId'>;
   trials!: EntityTable<TrialEvent, 'id'>;
   sessions!: EntityTable<SessionRecord, 'id'>;
+  retests!: EntityTable<RetestRecord, 'id'>;
 
   constructor(name: string = DB_NAME) {
     super(name);
@@ -67,7 +75,7 @@ export class GLeadDB extends Dexie {
   }
 }
 
-export const TABLE_NAMES = ['settings', 'cards', 'trials', 'sessions'] as const;
+export const TABLE_NAMES = ['settings', 'cards', 'trials', 'sessions', 'retests'] as const;
 
 let instance: GLeadDB | null = null;
 

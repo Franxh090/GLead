@@ -21,7 +21,7 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprint 2 of the plan in `docs/implementation-plan.md` is built. What works today:
+Sprint 3 of the plan in `docs/implementation-plan.md` is built. What works today:
 
 - **Three ear-to-hand drills**, each answered on the guitar through the
   microphone or by tapping, with feedback on the neck, a confirm prompt when
@@ -30,20 +30,29 @@ Sprint 2 of the plan in `docs/implementation-plan.md` is built. What works today
   - **B1 "Scale degree in key"**: a cadence sets the key, one note sounds, play it back or tap its degree. Major and minor keys.
   - **B2 "Chord function"**: a cadence, then one diatonic chord; tap its Roman numeral or play its root. I IV V vi first, then ii iii vii°, then the minor key.
   - **B3 "Note against chord"**: a chord strums, then one of its notes; play it back or tap root, 3rd, 5th or 7th. Major and minor triads, then 7, maj7 and m7.
+- **Changes**: play into the gaps. A loop runs and the first note at each
+  change is judged against the ladder rung (roots, 3rds, 5ths and 7ths, any
+  chord tone), through the mic or by tapping the neck. Targets show on the
+  neck until you turn them off; a hit map follows the take; a "surprise key"
+  draws one you have not practised, for transfer.
+- **Placement test**: about six minutes over the first four skills, no
+  retries, no scheduling; skills at 75% or better start in review rotation.
+- **Retests**: when a skill first reaches 90% over 20 practice trials, retests
+  are scheduled at 1, 7 and 30 days in keys you have not practised. They
+  appear on Today when due and only measure.
 - Keys rotate every trial from six practised keys per mode; six more are held
-  out for the transfer tests. A session mixes whichever skills you pick, and
-  deals new items of several skills in turns.
-- **Loops**: the five PRD progressions (plus two more) in any key, at four
-  tempos and four strum feels, with the sounding chord's tones on the neck.
-- Sessions of 5, 10 or 20 minutes; an end-of-session reflection; a Progress
-  screen that leads with delayed and transfer results (empty until retests
-  arrive in Sprint 3) and exports everything as JSON.
-- 640 unit tests and 10 Playwright specs (`pnpm e2e`) pass.
+  out. A session mixes whichever skills you pick. **Loops** serves the PRD
+  progressions in any key with the sounding chord's tones on the neck.
+- Progress leads with the delayed retests, transfer and the chord-tone hit
+  rate, then the placement baseline, then today's numbers. Everything exports
+  as JSON.
+- 649 unit tests and 13 Playwright specs (`pnpm e2e`) pass.
 
-Not yet: scoring what you play over a loop (C1, C2), placement, retests,
-B4–B6 beyond the imagine-first option, the dashboard proper. The mic
-confidence threshold is provisional until R2 measures real guitars on real
-phones.
+Not yet: the dashboard proper and the experiment harness (D4, §6
+randomisation), the session builder's warm-up/concept/play-along shape (D2),
+B4 find-it-on-the-neck and B5 spot-the-error, fading targets by accuracy.
+The mic confidence threshold is provisional until R2 measures real guitars on
+real phones.
 
 ## Run it locally
 

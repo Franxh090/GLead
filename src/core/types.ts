@@ -185,6 +185,10 @@ export interface BackingLoop {
 // --- Trial log (PRD §6, R5) ------------------------------------------------
 
 export type RetestKind = 'none' | '1d' | '7d' | '30d';
+export type RetestDelay = Exclude<RetestKind, 'none'>;
+
+/** Why a session ran: practice teaches; placement and retests only measure. */
+export type SessionPurpose = 'practice' | 'placement' | 'retest';
 
 export interface TrialEvent {
   id?: number;
@@ -208,6 +212,8 @@ export interface TrialEvent {
   experimentArm: string;
   retest: RetestKind;
   unseenKey: boolean;
+  /** Absent on rows written before Sprint 3: practice. */
+  purpose?: SessionPurpose;
 }
 
 export interface SessionRecord {
@@ -219,4 +225,19 @@ export interface SessionRecord {
   trials: number;
   correct: number;
   reflection: string;
+  /** Absent on rows written before Sprint 3: practice. */
+  kind?: SessionPurpose;
+}
+
+/** A scheduled retest of a skill in unseen keys (PRD D3). */
+export interface RetestRecord {
+  id?: number;
+  skillId: string;
+  delay: RetestDelay;
+  /** When the skill first reached criterion; the delays count from here. */
+  anchoredAt: Date;
+  dueAt: Date;
+  doneAt: Date | null;
+  /** The session that ran it. */
+  sessionId: string | null;
 }

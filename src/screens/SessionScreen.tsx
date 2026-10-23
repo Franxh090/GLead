@@ -4,17 +4,23 @@ import { STANDARD_TUNING, keyName } from '../vendor/fretfree/theory';
 import { playScript, stopScript } from '../audio/player';
 import { useApp } from '../core/app-context';
 import { newId } from '../core/events/ids';
-import { practisedKeys } from '../core/keys';
-import { planSession } from '../core/scheduling/plan';
+import { practisedKeys, unseenKeys } from '../core/keys';
+import { planSession, shuffle, type PlanEntry } from '../core/scheduling/plan';
+import { placementOutcome, placementPlan, seedKnownCards } from '../core/scheduling/placement';
+import { RETEST_TRIALS, planRetests } from '../core/scheduling/retests';
 import { createSessionRunner, type SessionRunner } from '../core/session/runner';
 import { useSettings } from '../core/settings-store';
-import type { InputAdapter, InputEvent } from '../core/types';
+import type { InputAdapter, InputEvent, RetestRecord, SessionPurpose } from '../core/types';
 import { drillForItem, modeOfItem, SKILLS } from '../drills/registry';
 import styles from '../styles/app.module.css';
 
 export interface SessionOptions {
   minutes: number;
   skillIds: readonly string[];
+  /** Default practice. A placement or a retest measures only. */
+  purpose?: SessionPurpose;
+  /** The retest being run, when `purpose` is `retest`. */
+  retest?: RetestRecord;
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -50,21 +56,35 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
     let cancelled = false;
     (async () => {
       const cards = await app.repo.allCards();
-      const items = SKILLS.filter((s) => options.skillIds.includes(s.id)).flatMap((s) => s.items());
+      const purpose = options.purpose ?? 'practice';
+      const skills = SKILLS.filter((s) => options.skillIds.includes(s.id));
+      const items = skills.flatMap((s) => s.items());
       const scheduler = createScheduler();
-      const plan = planSession({
-        now: new Date(),
-        minutes: options.minutes,
-        items,
-        cards,
-        scheduler,
-        rng: Math.random,
-      });
+      let plan: PlanEntry[];
+      if (purpose === 'placement') {
+        plan = placementPlan(SKILLS, Math.random);
+      } else if (purpose === 'retest') {
+        const pool: PlanEntry[] = [];
+        while (pool.length < RETEST_TRIALS) {
+          for (const item of shuffle([...items], Math.random)) pool.push({ item, kind: 'review' });
+        }
+        plan = pool.slice(0, RETEST_TRIALS);
+      } else {
+        plan = planSession({
+          now: new Date(),
+          minutes: options.minutes,
+          items,
+          cards,
+          scheduler,
+          rng: Math.random,
+        });
+      }
       const r = createSessionRunner({
         sessionId,
         plan,
         drillFor: drillForItem,
-        keyPoolFor: (item) => practisedKeys(modeOfItem(item)),
+        keyPoolFor: (item) =>
+          purpose === 'retest' ? unseenKeys(modeOfItem(item)) : practisedKeys(modeOfItem(item)),
         cards,
         scheduler,
         repo: app.repo,
@@ -75,20 +95,43 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
         clock: () => performance.now(),
         rng: Math.random,
         tuning: STANDARD_TUNING,
+        purpose,
+        retest: options.retest?.delay ?? 'none',
       });
       if (cancelled) return;
       r.subscribe((st) => {
         if (st.phase !== 'done' || savedRef.current) return;
         savedRef.current = true;
-        void app.repo.saveSession({
-          sessionId,
-          startedAt,
-          endedAt: new Date(),
-          minutes: options.minutes,
-          trials: st.trials,
-          correct: st.correct,
-          reflection: reflectionRef.current,
-        });
+        void (async () => {
+          const now = new Date();
+          await app.repo.saveSession({
+            sessionId,
+            startedAt,
+            endedAt: now,
+            minutes: options.minutes,
+            trials: st.trials,
+            correct: st.correct,
+            reflection: reflectionRef.current,
+            kind: purpose,
+          });
+          if (purpose === 'placement') {
+            const outcome = placementOutcome(
+              st.byItem,
+              SKILLS.flatMap((sk) => sk.items()),
+            );
+            await app.repo.saveCards(seedKnownCards(outcome, SKILLS, scheduler, now));
+          } else if (purpose === 'retest' && options.retest) {
+            await app.repo.saveRetest({ ...options.retest, doneAt: now, sessionId });
+          } else {
+            const fresh = planRetests(
+              await app.repo.trials(),
+              await app.repo.retests(),
+              skills.map((sk) => sk.id),
+              now,
+            );
+            for (const rt of fresh) await app.repo.saveRetest(rt);
+          }
+        })();
       });
       setRunner(r);
       void r.start();
@@ -133,12 +176,19 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
         trials: state.trials,
         correct: state.correct,
         reflection,
+        kind: options.purpose ?? 'practice',
       });
       onExit();
     };
     return (
       <div className={styles.card}>
-        <h2>Session done</h2>
+        <h2>
+          {(options.purpose ?? 'practice') === 'placement'
+            ? 'Placement done'
+            : options.purpose === 'retest'
+              ? `Retest done (${options.retest?.delay ?? ''})`
+              : 'Session done'}
+        </h2>
         <p>
           <span className={styles.big}>{acc === null ? '—' : `${acc}%`}</span>{' '}
           <span className={styles.muted}>

@@ -1,6 +1,6 @@
 import type { GLeadDB, Settings } from './db';
 import { DEFAULT_SETTINGS, TABLE_NAMES } from './db';
-import type { CardRecord, SessionRecord, TrialEvent } from '../types';
+import type { CardRecord, RetestRecord, SessionRecord, TrialEvent } from '../types';
 
 export interface Repo {
   getSettings(): Promise<Settings>;
@@ -11,6 +11,9 @@ export interface Repo {
   trials(): Promise<TrialEvent[]>;
   saveSession(session: SessionRecord): Promise<void>;
   sessions(): Promise<SessionRecord[]>;
+  retests(): Promise<RetestRecord[]>;
+  saveRetest(retest: RetestRecord): Promise<void>;
+  saveCards(cards: readonly CardRecord[]): Promise<void>;
   /** Everything, as one JSON-able object (PRD D6 export). */
   exportAll(): Promise<Record<string, unknown[]>>;
   clearAll(): Promise<void>;
@@ -41,6 +44,13 @@ export function createRepo(db: GLeadDB): Repo {
       await db.sessions.put(existing?.id === undefined ? session : { ...session, id: existing.id });
     },
     sessions: () => db.sessions.orderBy('startedAt').toArray(),
+    retests: () => db.retests.orderBy('dueAt').toArray(),
+    async saveRetest(retest) {
+      await db.retests.put(retest);
+    },
+    async saveCards(cards) {
+      await db.cards.bulkPut([...cards]);
+    },
     async exportAll() {
       const out: Record<string, unknown[]> = {};
       for (const name of TABLE_NAMES) out[name] = await db.table(name).toArray();

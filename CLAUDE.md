@@ -25,10 +25,10 @@ product definition is `docs/prd-concise.md`; the evidence behind it is
 ## Layout (`src/`)
 
 - `vendor/fretfree/`: theory (tonal), mic (pitchy in an AudioWorklet), audio (Tone.js guitar, strums, progressions), fretboard SVG, FSRS grading/scheduler/adaptive band.
-- `core/`: GLead's own engine. `types.ts` (InputAdapter, Drill, Scorer, BackingLoop, TrialEvent), `input/` (tap, mic adapters), `events/` (Dexie log + export), `scheduling/` (cards, interleaving, retests), `session/` (runner).
+- `core/`: GLead's own engine. `types.ts` (InputAdapter, Drill, Scorer, BackingLoop, TrialEvent), `input/` (tap, mic adapters), `events/` (Dexie log + export), `scheduling/` (session plan, placement, retests), `scoring/` (play-along change scorer), `session/` (runner; a session's `purpose` is practice, placement or retest), `metrics.ts` (every dashboard number).
 - `audio/`: cadences and backing loops built on the vendored audio engine.
 - `drills/`: one folder per drill, `logic.ts` pure and tested, view in `.tsx`.
-- `screens/`: Today, Session, Progress, Settings.
+- `screens/`: Today, Session, Changes (play-along), Loops, Progress, Settings.
 
 ## Conventions
 

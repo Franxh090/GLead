@@ -79,3 +79,21 @@ export function confirmShare(trials: readonly TrialEvent[]): number | null {
 export function percent(x: number | null): string {
   return x === null ? '—' : `${Math.round(x * 100)}%`;
 }
+
+/** Chord-tone hit rate (PRD §6): share of chord changes landed on a wanted tone, over play-along trials. */
+export function chordToneHitRate(trials: readonly TrialEvent[], drillId = 'c1-changes'): Tally {
+  return tallyAll(trials.filter((t) => t.drillId === drillId));
+}
+
+/** The placement baseline per skill, from the placement session's trials. */
+export function placementBaseline(trials: readonly TrialEvent[]): Record<string, Tally> {
+  return tallyBy(
+    trials.filter((t) => t.purpose === 'placement'),
+    (t) => t.skillId,
+  );
+}
+
+/** Practice trials only, for the in-session numbers. */
+export function practiceOnly(trials: readonly TrialEvent[]): TrialEvent[] {
+  return trials.filter((t) => (t.purpose ?? 'practice') === 'practice');
+}

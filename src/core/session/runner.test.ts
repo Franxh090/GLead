@@ -188,4 +188,23 @@ describe('session runner', () => {
     await flush();
     expect(h.logged[0]?.responseMs).toBe(300);
   });
+
+  it('a retest measures only: no retry, no card update, trials tagged', async () => {
+    const h = harness({ purpose: 'retest', retest: '7d' });
+    await h.runner.start();
+    h.runner.input(h.play(46));
+    expect(h.runner.state.total).toBe(3);
+    await flush();
+    expect(h.saved).toHaveLength(0);
+    expect(h.logged[0]).toMatchObject({ purpose: 'retest', retest: '7d', correct: false });
+  });
+
+  it('a placement test is tagged and leaves cards alone', async () => {
+    const h = harness({ purpose: 'placement' });
+    await h.runner.start();
+    h.runner.input(h.play(45));
+    await flush();
+    expect(h.saved).toHaveLength(0);
+    expect(h.logged[0]?.purpose).toBe('placement');
+  });
 });
