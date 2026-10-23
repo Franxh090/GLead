@@ -63,7 +63,7 @@ export function LoopsScreen() {
     const loop = createBackingLoop({ key, progressionId, bpm, feel }, settings.accidentalPref);
     loopRef.current = loop;
     setNotice(null);
-    let started = false;
+    let started: boolean;
     try {
       ({ started } = await loop.start({ onChord: (i) => setCurrent(i) }));
     } catch (err) {
