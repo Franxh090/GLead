@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createScheduler } from '../vendor/fretfree/engine/scheduler';
-import { STANDARD_TUNING, keyName, type KeyMode } from '../vendor/fretfree/theory';
+import { STANDARD_TUNING, keyName } from '../vendor/fretfree/theory';
 import { playScript, stopScript } from '../audio/player';
 import { useApp } from '../core/app-context';
 import { newId } from '../core/events/ids';
@@ -14,7 +14,7 @@ import styles from '../styles/app.module.css';
 
 export interface SessionOptions {
   minutes: number;
-  modes: readonly KeyMode[];
+  skillIds: readonly string[];
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -50,7 +50,7 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
     let cancelled = false;
     (async () => {
       const cards = await app.repo.allCards();
-      const items = SKILLS.filter((s) => options.modes.includes(s.mode)).flatMap((s) => s.items());
+      const items = SKILLS.filter((s) => options.skillIds.includes(s.id)).flatMap((s) => s.items());
       const scheduler = createScheduler();
       const plan = planSession({
         now: new Date(),

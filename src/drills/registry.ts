@@ -3,10 +3,23 @@ import type { KeyMode } from '../vendor/fretfree/theory';
 import type { AnyDrill, Item, Skill } from '../core/types';
 import scaleDegree from './b1-scale-degree/drill';
 import { B1_SKILLS } from './b1-scale-degree/logic';
+import chordFunction from './b2-chord-function/drill';
+import { B2_SKILLS } from './b2-chord-function/logic';
+import chordTone from './b3-chord-tone/drill';
+import { B3_SKILLS } from './b3-chord-tone/logic';
 
-export const DRILLS: readonly AnyDrill[] = [scaleDegree];
+export const DRILLS: readonly AnyDrill[] = [scaleDegree, chordFunction, chordTone];
 
-export const SKILLS: readonly (Skill & { mode: KeyMode })[] = [...B1_SKILLS];
+/** Skills in curriculum order (PRD §12 levels 1–3). `mode` picks the key pool a prompt draws from. */
+export const SKILLS: readonly (Skill & { mode: KeyMode })[] = [
+  B1_SKILLS[0]!,
+  B2_SKILLS[0]!,
+  B3_SKILLS[0]!,
+  B1_SKILLS[1]!,
+  B2_SKILLS[1]!,
+  B3_SKILLS[1]!,
+  B2_SKILLS[2]!,
+];
 
 export function drillById(id: string): AnyDrill {
   const d = DRILLS.find((x) => x.id === id);

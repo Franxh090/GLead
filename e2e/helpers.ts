@@ -46,15 +46,36 @@ export async function awaitListening(page: Page): Promise<void> {
   });
 }
 
-/** Turns the mic on in Settings and starts a session of the given length. */
-export async function startMicSession(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('switch', { name: 'Answer on the guitar (microphone)' }).click();
-  await page.getByRole('button', { name: 'Today' }).click();
+export interface StartOptions {
+  /** Skill button titles to select (the default B1 major stays selected unless deselected). */
+  skills?: readonly string[];
+  deselectDefault?: boolean;
+  mic?: boolean;
+}
+
+/** Optionally turns the mic on in Settings, picks skills on Today, and starts a 5-minute session. */
+export async function startSession(page: Page, opts: StartOptions = {}): Promise<void> {
+  if (opts.mic) {
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await page.getByRole('switch', { name: 'Answer on the guitar (microphone)' }).click();
+    await page.getByRole('button', { name: 'Today' }).click();
+  }
+  const skills = page.getByRole('group', { name: 'Skills' });
+  for (const title of opts.skills ?? []) await skills.getByRole('button', { name: title }).click();
+  if (opts.deselectDefault) {
+    await skills.getByRole('button', { name: 'Scale degrees in a major key' }).click();
+  }
   await page.getByRole('button', { name: '5 min' }).click();
-  await page.getByRole('button', { name: 'Start: scale degrees' }).click();
-  await page.getByRole('button', { name: 'Start listening' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Mic on' })).toBeVisible();
+  await page.getByRole('button', { name: 'Start session' }).click();
+  if (opts.mic) {
+    await page.getByRole('button', { name: 'Start listening' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Mic on' })).toBeVisible();
+  }
+}
+
+/** Turns the mic on in Settings and starts a B1 session. */
+export async function startMicSession(page: Page): Promise<void> {
+  await startSession(page, { mic: true });
 }
 
 /** The target MIDI note of the current B1 prompt, read from the page's debug hook. */

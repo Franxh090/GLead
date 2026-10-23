@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { createScheduler } from '../../vendor/fretfree/engine/scheduler';
 import type { Item } from '../types';
-import { interleave, newItemCap, planSession, sessionLength, spreadRepeats } from './plan';
+import {
+  interleave,
+  newItemCap,
+  planSession,
+  roundRobinBySkill,
+  sessionLength,
+  spreadRepeats,
+  spreadSkills,
+} from './plan';
 
 const items: Item[] = [1, 2, 3, 4, 5, 6, 7].map((d) => ({
   id: `degree:${d}@major`,
@@ -69,5 +77,49 @@ describe('planSession', () => {
     const plan = planSession({ now, minutes: 1, items, cards, scheduler, rng: seq() });
     expect(plan.filter((p) => p.kind === 'review').length).toBeGreaterThanOrEqual(3);
     expect(plan.some((p) => p.kind === 'new')).toBe(true);
+  });
+});
+
+describe('skills interleaved (B7)', () => {
+  const b1: Item[] = [1, 2, 3].map((d) => ({ id: `degree:${d}@major`, skillId: 'B1.major' }));
+  const b3: Item[] = ['1', '3', '5'].map((t) => ({
+    id: `chord-tone:${t}@major`,
+    skillId: 'B3.triads',
+  }));
+
+  it('deals new items of several skills in turns', () => {
+    expect(roundRobinBySkill([...b1, ...b3]).map((i) => i.skillId)).toEqual([
+      'B1.major',
+      'B3.triads',
+      'B1.major',
+      'B3.triads',
+      'B1.major',
+      'B3.triads',
+    ]);
+  });
+
+  it('breaks runs of three of one skill', () => {
+    const e = (item: Item) => ({ item, kind: 'new' as const });
+    const out = spreadSkills([e(b1[0]!), e(b1[1]!), e(b1[2]!), e(b3[0]!), e(b3[1]!), e(b3[2]!)]);
+    for (let i = 2; i < out.length; i++) {
+      const run =
+        out[i]!.item.skillId === out[i - 1]!.item.skillId &&
+        out[i - 1]!.item.skillId === out[i - 2]!.item.skillId;
+      expect(run).toBe(false);
+    }
+    expect(out).toHaveLength(6);
+  });
+
+  it('a session over two skills opens items of both', () => {
+    const plan = planSession({
+      now,
+      minutes: 2,
+      items: [...b1, ...b3],
+      cards: [],
+      scheduler: createScheduler(),
+      rng: seq(),
+    });
+    const skills = new Set(plan.filter((p) => p.kind === 'new').map((p) => p.item.skillId));
+    expect(skills.size).toBe(2);
   });
 });

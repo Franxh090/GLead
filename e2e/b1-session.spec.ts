@@ -5,7 +5,7 @@ test.describe('B1 scale degree session', () => {
   test('answers by tapping a degree and sees feedback on the neck', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: '5 min' }).click();
-    await page.getByRole('button', { name: 'Start: scale degrees' }).click();
+    await page.getByRole('button', { name: 'Start session' }).click();
     await expect(page.getByText(/Trial 1 of/)).toBeVisible();
     await awaitListening(page);
     const group = page.getByRole('group', { name: 'Scale degree' });
@@ -56,7 +56,7 @@ test.describe('B1 scale degree session', () => {
   test('ending a session saves it and Progress shows the trials', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: '5 min' }).click();
-    await page.getByRole('button', { name: 'Start: scale degrees' }).click();
+    await page.getByRole('button', { name: 'Start session' }).click();
     await awaitListening(page);
     await page
       .getByRole('group', { name: 'Scale degree' })

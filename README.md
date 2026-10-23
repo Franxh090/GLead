@@ -21,21 +21,29 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprint 1 of the plan in `docs/implementation-plan.md`. What works today:
+Sprint 2 of the plan in `docs/implementation-plan.md` is built. What works today:
 
-- **B1 "Scale degree in key"**: a cadence sets the key (any of six practised
-  majors or minors, rotating every trial), one note sounds, and you play it
-  back on your guitar through the microphone or tap its degree. Feedback on
-  the neck, a confirm prompt when the detector is unsure, misses come back a
-  few trials later, FSRS schedules each degree.
+- **Three ear-to-hand drills**, each answered on the guitar through the
+  microphone or by tapping, with feedback on the neck, a confirm prompt when
+  the detector is unsure, misses that come back a few trials later, and FSRS
+  scheduling per item:
+  - **B1 "Scale degree in key"**: a cadence sets the key, one note sounds, play it back or tap its degree. Major and minor keys.
+  - **B2 "Chord function"**: a cadence, then one diatonic chord; tap its Roman numeral or play its root. I IV V vi first, then ii iii vii°, then the minor key.
+  - **B3 "Note against chord"**: a chord strums, then one of its notes; play it back or tap root, 3rd, 5th or 7th. Major and minor triads, then 7, maj7 and m7.
+- Keys rotate every trial from six practised keys per mode; six more are held
+  out for the transfer tests. A session mixes whichever skills you pick, and
+  deals new items of several skills in turns.
+- **Loops**: the five PRD progressions (plus two more) in any key, at four
+  tempos and four strum feels, with the sounding chord's tones on the neck.
 - Sessions of 5, 10 or 20 minutes; an end-of-session reflection; a Progress
   screen that leads with delayed and transfer results (empty until retests
   arrive in Sprint 3) and exports everything as JSON.
-- 615 unit tests and 5 Playwright specs (`pnpm e2e`) pass.
+- 640 unit tests and 10 Playwright specs (`pnpm e2e`) pass.
 
-Not yet: B2–B7, the play-along drills (C1–C3), placement, retests, the
-dashboard proper. The mic confidence threshold is provisional until R2
-measures real guitars on real phones.
+Not yet: scoring what you play over a loop (C1, C2), placement, retests,
+B4–B6 beyond the imagine-first option, the dashboard proper. The mic
+confidence threshold is provisional until R2 measures real guitars on real
+phones.
 
 ## Run it locally
 

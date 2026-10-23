@@ -4,14 +4,10 @@
  * always serves an unseen key as readily as a practised one, which the
  * transfer tests need.
  */
-import {
-  chordSymbol,
-  getProgression,
-  progressionChords,
-  type AccidentalPref,
-} from '../vendor/fretfree/theory';
+import { chordSymbol, progressionChords, type AccidentalPref } from '../vendor/fretfree/theory';
 import { playProgression, type Playback } from '../vendor/fretfree/audio/audio';
 import type { BackingLoop, BackingLoopSpec } from '../core/types';
+import { loopProgression } from './loops';
 import { voiceChord } from './voicing';
 
 export const LOOP_DEFAULTS = { bpm: 80, beatsPerChord: 4 } as const;
@@ -20,8 +16,7 @@ export function createBackingLoop(
   spec: BackingLoopSpec,
   pref: AccidentalPref = 'sharp',
 ): BackingLoop {
-  const progression = getProgression(spec.progressionId);
-  const chords = progressionChords(spec.key, progression);
+  const chords = progressionChords(spec.key, loopProgression(spec.progressionId).numerals);
   let playback: Playback | null = null;
   return {
     spec,

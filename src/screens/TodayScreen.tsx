@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createScheduler } from '../vendor/fretfree/engine/scheduler';
-import type { KeyMode } from '../vendor/fretfree/theory';
 import { useApp } from '../core/app-context';
 import { useSettings } from '../core/settings-store';
+import { SKILLS } from '../drills/registry';
 import styles from '../styles/app.module.css';
 import type { SessionOptions } from './SessionScreen';
 
@@ -10,7 +10,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
   const app = useApp();
   const settings = useSettings(app.settings);
   const [minutes, setMinutes] = useState(10);
-  const [modes, setModes] = useState<KeyMode[]>(['major']);
+  const [skillIds, setSkillIds] = useState<string[]>([SKILLS[0]!.id]);
   const [due, setDue] = useState<number | null>(null);
 
   useEffect(() => {
@@ -21,9 +21,9 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
     });
   }, [app]);
 
-  const toggleMode = (m: KeyMode) =>
-    setModes((cur) =>
-      cur.includes(m) ? (cur.length > 1 ? cur.filter((x) => x !== m) : cur) : [...cur, m],
+  const toggleSkill = (id: string) =>
+    setSkillIds((cur) =>
+      cur.includes(id) ? (cur.length > 1 ? cur.filter((x) => x !== id) : cur) : [...cur, id],
     );
 
   return (
@@ -50,17 +50,17 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
         </div>
       </div>
       <div className={styles.field}>
-        <span>Keys</span>
-        <div className={styles.row} role="group" aria-label="Key modes">
-          {(['major', 'minor'] as const).map((m) => (
+        <span>Skills</span>
+        <div className={styles.row} role="group" aria-label="Skills">
+          {SKILLS.map((sk) => (
             <button
-              key={m}
+              key={sk.id}
               type="button"
-              className={`${styles.button} ${modes.includes(m) ? styles.primary : ''}`}
-              aria-pressed={modes.includes(m)}
-              onClick={() => toggleMode(m)}
+              className={`${styles.button} ${skillIds.includes(sk.id) ? styles.primary : ''}`}
+              aria-pressed={skillIds.includes(sk.id)}
+              onClick={() => toggleSkill(sk.id)}
             >
-              {m}
+              {sk.title}
             </button>
           ))}
         </div>
@@ -75,9 +75,9 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
         <button
           type="button"
           className={`${styles.button} ${styles.primary}`}
-          onClick={() => onStart({ minutes, modes })}
+          onClick={() => onStart({ minutes, skillIds })}
         >
-          Start: scale degrees
+          Start session
         </button>
       </div>
     </div>

@@ -103,7 +103,7 @@ export function planSession(input: PlanInput): PlanEntry[] {
     .filter((i): i is Item => Boolean(i));
   const reviews: PlanEntry[] = shuffle(due, rng).map((item) => ({ item, kind: 'review' }));
 
-  const fresh = items.filter((i) => !known.has(i.id));
+  const fresh = roundRobinBySkill(items.filter((i) => !known.has(i.id)));
   const cap = Math.min(newItemCap(minutes), fresh.length);
   const chosen = fresh.slice(0, cap);
   const news: PlanEntry[] = [];
@@ -114,7 +114,7 @@ export function planSession(input: PlanInput): PlanEntry[] {
     }
   }
 
-  let plan = interleave(reviews, news);
+  let plan = spreadSkills(interleave(reviews, news));
   // Top up a short plan with the items least recently reviewed, so a session
   // is never shorter than its budget while anything is practisable.
   if (plan.length < length) {
@@ -128,9 +128,53 @@ export function planSession(input: PlanInput): PlanEntry[] {
     for (let k = 0; plan.length + extra.length < length && sorted.length > 0; k++) {
       extra.push({ item: sorted[k % sorted.length] as Item, kind: 'review' });
     }
-    plan = spreadRepeats([...plan, ...shuffle(extra, rng)]);
+    plan = spreadSkills(spreadRepeats([...plan, ...shuffle(extra, rng)]));
   }
   return plan.slice(0, length);
+}
+
+/**
+ * Items of several skills dealt in turns (PRD B7: interleave skills), so a
+ * session that opens two skills introduces one item of each by turns rather
+ * than all of one skill first.
+ */
+export function roundRobinBySkill(items: readonly Item[]): Item[] {
+  const bySkill = new Map<string, Item[]>();
+  for (const i of items) bySkill.set(i.skillId, [...(bySkill.get(i.skillId) ?? []), i]);
+  const queues = [...bySkill.values()];
+  const out: Item[] = [];
+  for (let k = 0; out.length < items.length; k++) {
+    const q = queues[k % queues.length];
+    const next = q?.shift();
+    if (next) out.push(next);
+  }
+  return out;
+}
+
+/**
+ * Where two skills are in play, avoid long runs of one: an entry that
+ * continues a run of its skill swaps with the next entry of another skill,
+ * unless that would put the same item twice in a row.
+ */
+export function spreadSkills(entries: PlanEntry[]): PlanEntry[] {
+  const out = [...entries];
+  const skills = new Set(out.map((e) => e.item.skillId));
+  if (skills.size < 2) return out;
+  for (let k = 2; k < out.length; k++) {
+    const a = out[k - 2]!.item.skillId;
+    const b = out[k - 1]!.item.skillId;
+    if (a !== b || out[k]!.item.skillId !== b) continue;
+    const swap = out.findIndex(
+      (e, idx) =>
+        idx > k &&
+        e.item.skillId !== b &&
+        e.item.id !== out[k - 1]!.item.id &&
+        (idx + 1 >= out.length || out[idx + 1]!.item.id !== out[k]!.item.id) &&
+        out[idx - 1]!.item.id !== out[k]!.item.id,
+    );
+    if (swap > 0) [out[k], out[swap]] = [out[swap] as PlanEntry, out[k] as PlanEntry];
+  }
+  return out;
 }
 
 /** Where a missed item goes back into the queue: `gap` trials on, or at the end. */

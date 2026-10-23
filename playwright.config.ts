@@ -27,6 +27,8 @@ export default defineConfig({
         launchOptions: {
           executablePath:
             process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+          // Let the AudioContext run without a gesture, so Tone's Transport advances headless.
+          args: ['--autoplay-policy=no-user-gesture-required'],
         },
       },
     },
