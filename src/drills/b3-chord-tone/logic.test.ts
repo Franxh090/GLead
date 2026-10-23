@@ -78,7 +78,12 @@ describe('B3 grading', () => {
   });
 
   it('shows the target on the neck and replays chord, target, then the wrong note', () => {
-    const fb = { answer: { midi: 67 }, mode: 'play' as const, check: b3Check(p, { midi: 67 }) };
+    const fb = {
+      answer: { midi: 67 },
+      mode: 'play' as const,
+      variant: 'full' as const,
+      check: b3Check(p, { midi: 67 }),
+    };
     const pos = b3FeedbackPositions(p, fb);
     expect(pos.expected).toContainEqual({ string: 6, fret: 0 });
     expect(pos.given).toContainEqual({ string: 1, fret: 3 });
@@ -88,6 +93,7 @@ describe('B3 grading', () => {
     const tapped = {
       answer: { tone: '5' as const },
       mode: 'tap' as const,
+      variant: 'full' as const,
       check: b3Check(p, { tone: '5' }),
     };
     const s2 = b3FeedbackAudio(p, tapped);

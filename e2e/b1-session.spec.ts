@@ -1,11 +1,24 @@
 import { expect, test } from '@playwright/test';
-import { awaitListening, currentTarget, playNotes, startMicSession, useFakeMic } from './helpers';
+import {
+  awaitListening,
+  currentTarget,
+  fixArms,
+  playNotes,
+  startMicSession,
+  useFakeMic,
+} from './helpers';
+
+test.beforeEach(async ({ page }) => fixArms(page));
 
 test.describe('B1 scale degree session', () => {
   test('answers by tapping a degree and sees feedback on the neck', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: '5 min' }).click();
     await page.getByRole('button', { name: 'Start session' }).click();
+    await page
+      .getByRole('region', { name: 'Session goal' })
+      .getByRole('button', { name: 'Begin' })
+      .click();
     await expect(page.getByText(/Trial 1 of/)).toBeVisible();
     await awaitListening(page);
     const group = page.getByRole('group', { name: 'Scale degree' });
@@ -57,6 +70,10 @@ test.describe('B1 scale degree session', () => {
     await page.goto('/');
     await page.getByRole('button', { name: '5 min' }).click();
     await page.getByRole('button', { name: 'Start session' }).click();
+    await page
+      .getByRole('region', { name: 'Session goal' })
+      .getByRole('button', { name: 'Begin' })
+      .click();
     await awaitListening(page);
     await page
       .getByRole('group', { name: 'Scale degree' })

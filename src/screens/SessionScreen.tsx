@@ -5,13 +5,20 @@ import { playScript, stopScript } from '../audio/player';
 import { useApp } from '../core/app-context';
 import { newId } from '../core/events/ids';
 import { practisedKeys, unseenKeys } from '../core/keys';
-import { planSession, shuffle, type PlanEntry } from '../core/scheduling/plan';
+import {
+  planSession,
+  sessionShape,
+  shuffle,
+  warmUpFirst,
+  type PlanEntry,
+  type SessionShape,
+} from '../core/scheduling/plan';
 import { placementOutcome, placementPlan, seedKnownCards } from '../core/scheduling/placement';
 import { RETEST_TRIALS, planRetests } from '../core/scheduling/retests';
 import { createSessionRunner, type SessionRunner } from '../core/session/runner';
 import { useSettings } from '../core/settings-store';
 import type { InputAdapter, InputEvent, RetestRecord, SessionPurpose } from '../core/types';
-import { drillForItem, modeOfItem, SKILLS } from '../drills/registry';
+import { drillForItem, modeOfItem, SKILLS, skillById } from '../drills/registry';
 import styles from '../styles/app.module.css';
 
 export interface SessionOptions {
@@ -34,10 +41,26 @@ function useRunnerState(runner: SessionRunner | null) {
   );
 }
 
-export function SessionScreen({ options, onExit }: { options: SessionOptions; onExit(): void }) {
+export interface PlayAlongPreset {
+  minutes: number;
+  skillIds: readonly string[];
+}
+
+export function SessionScreen({
+  options,
+  onExit,
+  onPlayAlong,
+}: {
+  options: SessionOptions;
+  onExit(): void;
+  /** Hand over to the Changes screen for the session's play-along. */
+  onPlayAlong?(preset: PlayAlongPreset): void;
+}) {
   const app = useApp();
   const settings = useSettings(app.settings);
   const [runner, setRunner] = useState<SessionRunner | null>(null);
+  const [shape, setShape] = useState<SessionShape | null>(null);
+  const [goalSeen, setGoalSeen] = useState(false);
   const [reflection, setReflection] = useState('');
   const savedRef = useRef(false);
   const reflectionRef = useRef('');
@@ -70,14 +93,16 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
         }
         plan = pool.slice(0, RETEST_TRIALS);
       } else {
-        plan = planSession({
-          now: new Date(),
-          minutes: options.minutes,
-          items,
-          cards,
-          scheduler,
-          rng: Math.random,
-        });
+        plan = warmUpFirst(
+          planSession({
+            now: new Date(),
+            minutes: options.minutes,
+            items,
+            cards,
+            scheduler,
+            rng: Math.random,
+          }),
+        );
       }
       const r = createSessionRunner({
         sessionId,
@@ -133,8 +158,18 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
           }
         })();
       });
+      const titleOf = (id: string) => {
+        try {
+          return skillById(id).title;
+        } catch {
+          return id;
+        }
+      };
+      const sh = purpose === 'practice' ? sessionShape(plan, options.minutes, titleOf) : null;
+      setShape(sh);
       setRunner(r);
-      void r.start();
+      // A practice session states its goal first and starts on the learner's tap.
+      if (!sh) void r.start();
     })();
     return () => {
       cancelled = true;
@@ -162,6 +197,31 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
 
   if (!runner || !state) return <p className={styles.muted}>Preparing your session…</p>;
 
+  if (shape && !goalSeen) {
+    return (
+      <div className={styles.card} role="region" aria-label="Session goal">
+        <h2>This session</h2>
+        <p>{shape.goal}</p>
+        <p className={styles.muted}>
+          Reviews first, because retrieval before new material warms the ear; then one new thing;
+          then music. Keys change every trial on purpose: it feels harder and holds better.
+        </p>
+        <div className={styles.row}>
+          <button
+            type="button"
+            className={`${styles.button} ${styles.primary}`}
+            onClick={() => {
+              setGoalSeen(true);
+              void runner.start();
+            }}
+          >
+            Begin
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const onTap = (e: InputEvent) => runner.input(e);
   const startMic = () => void mic?.start().catch(() => undefined);
 
@@ -178,7 +238,6 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
         reflection,
         kind: options.purpose ?? 'practice',
       });
-      onExit();
     };
     return (
       <div className={styles.card}>
@@ -233,10 +292,23 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
           <button
             type="button"
             className={`${styles.button} ${styles.primary}`}
-            onClick={() => void saveReflection()}
+            onClick={() => void saveReflection().then(onExit)}
           >
             Save and finish
           </button>
+          {shape?.playAlong && onPlayAlong && (
+            <button
+              type="button"
+              className={styles.button}
+              onClick={() =>
+                void saveReflection().then(() =>
+                  onPlayAlong({ minutes: shape.playAlong!.minutes, skillIds: options.skillIds }),
+                )
+              }
+            >
+              Save, then {shape.playAlong.minutes} minutes over a loop
+            </button>
+          )}
         </div>
       </div>
     );
@@ -282,6 +354,7 @@ export function SessionScreen({ options, onExit }: { options: SessionOptions; on
             ? { heard: state.pending.heard, confidence: state.pending.confidence }
             : null
         }
+        collected={state.collected}
         onConfirm={(accept) => runner.confirm(accept)}
         onReplay={() => void runner.replay()}
       />

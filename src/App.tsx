@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChangesScreen } from './screens/ChangesScreen';
 import { LoopsScreen } from './screens/LoopsScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
-import { SessionScreen, type SessionOptions } from './screens/SessionScreen';
+import { SessionScreen, type PlayAlongPreset, type SessionOptions } from './screens/SessionScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import styles from './styles/app.module.css';
@@ -12,6 +12,7 @@ type Screen = 'today' | 'session' | 'changes' | 'loops' | 'progress' | 'settings
 export function App() {
   const [screen, setScreen] = useState<Screen>('today');
   const [session, setSession] = useState<SessionOptions | null>(null);
+  const [preset, setPreset] = useState<PlayAlongPreset | null>(null);
 
   const start = (options: SessionOptions) => {
     setSession(options);
@@ -42,9 +43,16 @@ export function App() {
       <main>
         {screen === 'today' && <TodayScreen onStart={start} />}
         {screen === 'session' && session && (
-          <SessionScreen options={session} onExit={() => setScreen('today')} />
+          <SessionScreen
+            options={session}
+            onExit={() => setScreen('today')}
+            onPlayAlong={(p) => {
+              setPreset(p);
+              setScreen('changes');
+            }}
+          />
         )}
-        {screen === 'changes' && <ChangesScreen />}
+        {screen === 'changes' && <ChangesScreen preset={preset} />}
         {screen === 'loops' && <LoopsScreen />}
         {screen === 'progress' && <ProgressScreen />}
         {screen === 'settings' && <SettingsScreen />}

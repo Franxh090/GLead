@@ -51,7 +51,19 @@ type TakeState = 'idle' | 'playing' | 'done';
  * ladder rung. The targets show on the neck until you ask them not to. After
  * the take, a hit map per change, and every change goes into the trial log.
  */
-export function ChangesScreen() {
+export interface ChangesPreset {
+  minutes: number;
+  skillIds: readonly string[];
+}
+
+/** The rung a session's skills point at: chord tones once B3 is in play, roots before. */
+export function rungForSkills(skillIds: readonly string[]): Rung {
+  if (skillIds.some((s) => s.startsWith('B3.sevenths'))) return 'fifths-sevenths';
+  if (skillIds.some((s) => s.startsWith('B3'))) return 'thirds';
+  return 'roots';
+}
+
+export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null }) {
   const app = useApp();
   const settings = useSettings(app.settings);
   const [progressionId, setProgressionId] = useState(LOOP_PROGRESSIONS[0]!.id);
@@ -61,8 +73,8 @@ export function ChangesScreen() {
   });
   const [surprise, setSurprise] = useState(false);
   const [bpm, setBpm] = useState<number>(80);
-  const [rung, setRung] = useState<Rung>('roots');
-  const [passes, setPasses] = useState<number>(2);
+  const [rung, setRung] = useState<Rung>(preset ? rungForSkills(preset.skillIds) : 'roots');
+  const [passes, setPasses] = useState<number>(preset ? (preset.minutes >= 4 ? 4 : 2) : 2);
   const [showTargets, setShowTargets] = useState(true);
   const [take, setTake] = useState<TakeState>('idle');
   const [current, setCurrent] = useState<number | null>(null);
@@ -218,6 +230,12 @@ export function ChangesScreen() {
   return (
     <div className={styles.card}>
       <h2>Changes</h2>
+      {preset && (
+        <p className={styles.status} role="status">
+          Your session's play-along: {passes} passes, landing on{' '}
+          {RUNGS.find((r) => r.id === rung)?.title.toLowerCase()}.
+        </p>
+      )}
       <p className={styles.muted}>{CHANGES_RATIONALE}</p>
       {take !== 'playing' && (
         <>

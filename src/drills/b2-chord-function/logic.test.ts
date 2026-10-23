@@ -82,13 +82,19 @@ describe('B2 prompts and grading', () => {
     const fb = {
       answer: { numeral: 'IV' },
       mode: 'tap' as const,
+      variant: 'full' as const,
       check: b2Check(p, { numeral: 'IV' }),
     };
     expect(b2FeedbackPositions(p, fb).expected).toContainEqual({ string: 6, fret: 0 });
     const steps = b2FeedbackAudio(p, fb);
     expect(steps.map((s) => s.type)).toEqual(['strum', 'rest', 'strum']);
     if (steps[2]?.type === 'strum') expect(steps[2].notes[0]).toBe('C3');
-    const played = { answer: { midi: 60 }, mode: 'play' as const, check: b2Check(p, { midi: 60 }) };
+    const played = {
+      answer: { midi: 60 },
+      mode: 'play' as const,
+      variant: 'full' as const,
+      check: b2Check(p, { midi: 60 }),
+    };
     expect(b2FeedbackPositions(p, played).given).toContainEqual({ string: 2, fret: 1 });
   });
 });

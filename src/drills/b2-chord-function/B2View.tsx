@@ -22,6 +22,7 @@ export function B2View({
     displayPc(prompt.rootPc),
     tuning,
     prompt.accidentalPref,
+    feedback,
   );
   return (
     <div className={styles.card} data-target-midi={prompt.rootMidi}>

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { awaitListening, startSession } from './helpers';
+import { awaitListening, fixArms, startSession } from './helpers';
+
+test.beforeEach(async ({ page }) => fixArms(page));
 
 test.describe('Changes: play into the gaps', () => {
   test('a take by tapping the neck scores each change and logs the hit rate', async ({ page }) => {

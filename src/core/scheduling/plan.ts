@@ -185,3 +185,48 @@ export function retryIndex(
 ): number {
   return Math.min(current + gap, current + remaining);
 }
+
+// --- The session's shape (PRD D2) ------------------------------------------
+
+export interface SessionShape {
+  /** One line, stated up front. */
+  goal: string;
+  /** How many trials warm the ear up with reviews before new material. */
+  warmUp: number;
+  /** The skills that bring new items this session. */
+  concepts: string[];
+  /** A play-along to finish on, when the session is long enough. */
+  playAlong: { minutes: number } | null;
+}
+
+/**
+ * Warm-up, one concept, one play-along (research findings 1 and 4): the
+ * plan's reviews come first; new items follow; a session of ten minutes or
+ * more ends on a short take over a loop.
+ */
+export function sessionShape(
+  plan: readonly PlanEntry[],
+  minutes: number,
+  titleOf: (skillId: string) => string,
+): SessionShape {
+  const reviews = plan.filter((e) => e.kind === 'review').length;
+  const concepts = [...new Set(plan.filter((e) => e.kind === 'new').map((e) => e.item.skillId))];
+  const playAlong = minutes >= 10 ? { minutes: minutes >= 20 ? 4 : 2 } : null;
+  const parts: string[] = [];
+  if (reviews > 0) parts.push(`${reviews} review${reviews === 1 ? '' : 's'} to warm up`);
+  if (concepts.length > 0) parts.push(`new: ${concepts.map(titleOf).join(' and ')}`);
+  if (playAlong) parts.push(`then ${playAlong.minutes} minutes over a loop`);
+  return {
+    goal: parts.length ? parts.join(', ') + '.' : 'A short pass over what you know.',
+    warmUp: reviews,
+    concepts,
+    playAlong,
+  };
+}
+
+/** Reviews first, then the rest, keeping the no-repeat rule. */
+export function warmUpFirst(plan: readonly PlanEntry[]): PlanEntry[] {
+  const reviews = plan.filter((e) => e.kind === 'review');
+  const rest = plan.filter((e) => e.kind !== 'review');
+  return spreadRepeats([...reviews, ...rest]);
+}

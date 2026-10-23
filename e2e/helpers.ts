@@ -8,6 +8,14 @@ interface FakeMic {
 
 type FakeMicWindow = Window & { __gleadFakeMic?: true | FakeMic };
 
+/** Deterministic experiment arms (`main.tsx`): full feedback, imagine-first off, number labels. */
+export async function fixArms(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    (window as Window & { __gleadArms?: string }).__gleadArms =
+      'imagine=setting;feedback=full;labels=numbers';
+  });
+}
+
 /** Every page load from now on gets the fake mic (`main.tsx`). Call before the first `goto`. */
 export async function useFakeMic(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -67,6 +75,11 @@ export async function startSession(page: Page, opts: StartOptions = {}): Promise
   }
   await page.getByRole('button', { name: '5 min' }).click();
   await page.getByRole('button', { name: 'Start session' }).click();
+  // A practice session states its goal first.
+  await page
+    .getByRole('region', { name: 'Session goal' })
+    .getByRole('button', { name: 'Begin' })
+    .click();
   if (opts.mic) {
     await page.getByRole('button', { name: 'Start listening' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Mic on' })).toBeVisible();

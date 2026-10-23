@@ -207,4 +207,56 @@ describe('session runner', () => {
     expect(h.saved).toHaveLength(0);
     expect(h.logged[0]?.purpose).toBe('placement');
   });
+
+  it('draws imagine-first and the feedback variant per trial under random arms', async () => {
+    let n = 0;
+    const h = harness({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        experimentArm: 'imagine=random;feedback=random;labels=numbers',
+      },
+      rng: () => (n++ % 2 === 0 ? 0.2 : 0.8),
+    });
+    const seen: string[] = [];
+    h.runner.subscribe((st) => seen.push(st.phase));
+    await h.runner.start();
+    h.runner.input(h.play(45));
+    await flush();
+    expect(h.logged[0]?.feedbackVariant).toMatch(/full|faded/);
+    expect(h.runner.state.feedback?.variant).toBe(h.logged[0]?.feedbackVariant);
+    expect(typeof h.logged[0]?.imagineFirst).toBe('boolean');
+  });
+
+  it('collects a sequence for a drill that accumulates', async () => {
+    type Seq = { midis: number[] };
+    const twoNotes: Drill<P, Seq> = {
+      id: 'two',
+      title: 'Two',
+      skills: ['echo'],
+      inputModes: ['mic'],
+      rationale: 'test',
+      accumulate: true,
+      makePrompt: () => ({ midi: 45 }),
+      audio: () => [],
+      answerFromInput: (_p: P, e: InputEvent, collected: readonly InputEvent[]): Seq | null =>
+        e.kind === 'play' && e.midi !== undefined && collected.length >= 1
+          ? { midis: [...collected.map((c) => c.midi as number), e.midi] }
+          : null,
+      check: (_p: P, a: Seq) => ({
+        correct: a.midis.length === 2,
+        expected: '2 notes',
+        given: `${a.midis.length}`,
+      }),
+      describeAnswer: (a: Seq) => a.midis.join(','),
+      render: () => null,
+    };
+    const h = harness({ drillFor: () => twoNotes as unknown as Drill<P, A> });
+    await h.runner.start();
+    h.runner.input(h.play(45, 0.2)); // low confidence does not gate a sequence
+    expect(h.runner.state.phase).toBe('listening');
+    expect(h.runner.state.collected).toHaveLength(1);
+    h.runner.input(h.play(47));
+    expect(h.runner.state.phase).toBe('feedback');
+    expect(h.runner.state.feedback?.check.correct).toBe(true);
+  });
 });

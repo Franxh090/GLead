@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../core/app-context';
+import { decodeArms } from '../core/experiments';
 import { useSettings } from '../core/settings-store';
 import styles from '../styles/app.module.css';
 
@@ -141,6 +142,15 @@ export function SettingsScreen() {
         value={s.soundOn}
         onChange={(v) => void app.settings.update({ soundOn: v })}
       />
+      <h3>Your experiment arms</h3>
+      <p className={styles.muted}>
+        Drawn once at first run (PRD §6):{' '}
+        {(() => {
+          const a = decodeArms(s.experimentArm);
+          return `imagine-first ${a.imagine === 'random' ? 'at random per trial' : 'as set above'}; feedback ${a.feedback === 'random' ? 'full or faded at random per trial' : 'always full'}; labels started as ${a.labels}.`;
+        })()}{' '}
+        Progress compares the arms.
+      </p>
       <h3>Your data</h3>
       <p className={styles.muted}>
         Everything stays on this device: results and settings only, never audio. Export it from

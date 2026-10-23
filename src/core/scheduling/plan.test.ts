@@ -7,8 +7,10 @@ import {
   planSession,
   roundRobinBySkill,
   sessionLength,
+  sessionShape,
   spreadRepeats,
   spreadSkills,
+  warmUpFirst,
 } from './plan';
 
 const items: Item[] = [1, 2, 3, 4, 5, 6, 7].map((d) => ({
@@ -121,5 +123,27 @@ describe('skills interleaved (B7)', () => {
     });
     const skills = new Set(plan.filter((p) => p.kind === 'new').map((p) => p.item.skillId));
     expect(skills.size).toBe(2);
+  });
+});
+
+describe('session shape (D2)', () => {
+  const e = (id: string, skillId: string, kind: 'review' | 'new') => ({
+    item: { id, skillId },
+    kind,
+  });
+  it('states the goal and puts reviews first', () => {
+    const plan = [
+      e('a', 'B1.major', 'new'),
+      e('b', 'B1.major', 'review'),
+      e('c', 'B3.triads', 'new'),
+      e('d', 'B2.primary', 'review'),
+    ];
+    const shape = sessionShape(plan, 10, (id) => id);
+    expect(shape.goal).toBe(
+      '2 reviews to warm up, new: B1.major and B3.triads, then 2 minutes over a loop.',
+    );
+    expect(sessionShape(plan, 5, (id) => id).playAlong).toBeNull();
+    expect(warmUpFirst(plan).map((x) => x.kind)).toEqual(['review', 'review', 'new', 'new']);
+    expect(sessionShape([], 5, (id) => id).goal).toBe('A short pass over what you know.');
   });
 });

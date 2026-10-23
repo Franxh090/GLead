@@ -1,6 +1,15 @@
 import { Rating } from 'ts-fsrs';
 import { describe, expect, it } from 'vitest';
-import { confirmShare, delayed, tallyBy, transfer, trialsToCriterion } from './metrics';
+import {
+  confirmShare,
+  delayed,
+  experimentReport,
+  learningRate,
+  skillReport,
+  tallyBy,
+  transfer,
+  trialsToCriterion,
+} from './metrics';
 import type { TrialEvent } from './types';
 
 const t = (o: Partial<TrialEvent>): TrialEvent => ({
@@ -59,5 +68,41 @@ describe('metrics', () => {
     expect(confirmShare([t({ mode: 'play' }), t({ mode: 'confirm' }), t({ mode: 'tap' })])).toBe(
       0.5,
     );
+  });
+
+  it('reports a skill: baseline, practice, recent, criterion, learning rate, retests', () => {
+    const trials = [
+      ...Array.from({ length: 4 }, () => t({ purpose: 'placement', correct: false })),
+      ...Array.from({ length: 10 }, () => t({ correct: false })),
+      ...Array.from({ length: 25 }, () => t({ correct: true })),
+      t({ retest: '7d', unseenKey: true, correct: true }),
+      t({ skillId: 'B2.primary' }),
+    ];
+    const r = skillReport(trials, 'B1.major');
+    expect(r.baseline).toEqual({ trials: 4, correct: 0 });
+    expect(r.practice.trials).toBe(35);
+    expect(r.recent).toBe(1);
+    expect(r.trialsToCriterion).toBe(28);
+    expect(r.learningRate).toBeGreaterThan(0);
+    expect(r.retests['7d']).toEqual({ trials: 1, correct: 1 });
+    expect(r.transfer.trials).toBe(1);
+    expect(learningRate(trials.slice(0, 5))).toBeNull();
+  });
+
+  it('compares arms from what each trial got', () => {
+    const trials = [
+      t({ imagineFirst: true, correct: true }),
+      t({ imagineFirst: false, correct: false }),
+      t({ feedbackVariant: 'faded', correct: true }),
+      t({ experimentArm: 'imagine=random;feedback=random;labels=moveable-do' }),
+    ];
+    const report = experimentReport(trials);
+    expect(report).toHaveLength(3);
+    expect(report[0]?.arms[0]).toEqual({
+      label: 'Imagine first',
+      tally: { trials: 1, correct: 1 },
+    });
+    expect(report[1]?.arms[1]?.tally).toEqual({ trials: 1, correct: 1 });
+    expect(report[2]?.arms[1]?.tally.trials).toBe(1);
   });
 });

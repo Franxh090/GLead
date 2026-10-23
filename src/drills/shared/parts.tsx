@@ -105,8 +105,11 @@ export function feedbackMarkers(
   expectedLabel: string,
   tuning: Tuning,
   pref: AccidentalPref,
+  feedback?: { variant: 'full' | 'faded'; check: { correct: boolean } } | null,
 ): FretMarker[] {
   if (!positions) return [];
+  // Faded feedback (PRD §6): a right answer gets a tick, not a map.
+  if (feedback && feedback.variant === 'faded' && feedback.check.correct) return [];
   return [
     ...positions.expected.map((p) => ({
       ...p,

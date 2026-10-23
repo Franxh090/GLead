@@ -119,7 +119,12 @@ describe('B1 feedback', () => {
   );
 
   it('marks every B on the neck and the wrong note where it was played', () => {
-    const fb = { answer: { midi: 60 }, mode: 'play' as const, check: b1Check(p, { midi: 60 }) };
+    const fb = {
+      answer: { midi: 60 },
+      mode: 'play' as const,
+      variant: 'full' as const,
+      check: b1Check(p, { midi: 60 }),
+    };
     const pos = b1FeedbackPositions(p, fb);
     expect(pos.expected.length).toBeGreaterThan(4);
     expect(pos.expected).toContainEqual({ string: 5, fret: 2 });
@@ -127,18 +132,29 @@ describe('B1 feedback', () => {
   });
 
   it('plays the right note then the wrong one after a miss, and nothing after a hit', () => {
-    const miss = { answer: { midi: 60 }, mode: 'play' as const, check: b1Check(p, { midi: 60 }) };
+    const miss = {
+      answer: { midi: 60 },
+      mode: 'play' as const,
+      variant: 'full' as const,
+      check: b1Check(p, { midi: 60 }),
+    };
     const steps = b1FeedbackAudio(p, miss);
     expect(steps).toHaveLength(1);
     if (steps[0]?.type === 'notes') expect(steps[0].notes).toEqual(['B3', 'C4']);
     const tapped = {
       answer: { degree: 5 as const },
       mode: 'tap' as const,
+      variant: 'full' as const,
       check: b1Check(p, { degree: 5 }),
     };
     const s2 = b1FeedbackAudio(p, tapped);
     if (s2[0]?.type === 'notes') expect(s2[0].notes).toEqual(['B3', 'D4']);
-    const hit = { answer: { midi: 59 }, mode: 'play' as const, check: b1Check(p, { midi: 59 }) };
+    const hit = {
+      answer: { midi: 59 },
+      mode: 'play' as const,
+      variant: 'full' as const,
+      check: b1Check(p, { midi: 59 }),
+    };
     expect(b1FeedbackAudio(p, hit)).toEqual([]);
   });
 });

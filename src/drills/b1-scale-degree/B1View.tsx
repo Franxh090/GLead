@@ -35,6 +35,7 @@ export function B1View({
     displayPc(prompt.targetPc),
     tuning,
     prompt.accidentalPref,
+    feedback,
   );
   return (
     <div className={styles.card} data-target-midi={prompt.targetMidi}>

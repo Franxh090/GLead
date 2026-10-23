@@ -106,6 +106,8 @@ export interface Feedback<A> {
   answer: A;
   mode: AnswerMode;
   check: Check;
+  /** Faded: after a correct answer the view shows only that it was right, no markers (PRD §6). */
+  variant: 'full' | 'faded';
 }
 
 export interface DrillRenderProps<P, A> {
@@ -120,6 +122,8 @@ export interface DrillRenderProps<P, A> {
   listening: boolean;
   /** A low-confidence play waiting for the learner's yes or no. */
   pending: { heard: string; confidence: number } | null;
+  /** For a drill that collects several notes: what has been heard so far. */
+  collected: readonly InputEvent[];
   onConfirm(accept: boolean): void;
   onReplay(): void;
 }
@@ -134,8 +138,14 @@ export interface Drill<P, A> {
   makePrompt(item: Item, ctx: DrillContext): P;
   /** The prompt's sound. */
   audio(prompt: P): AudioStep[];
-  /** Turns an input event into an answer, or `null` to ignore it (a note outside the drill's range, say). */
-  answerFromInput(prompt: P, event: InputEvent): A | null;
+  /**
+   * Turns an input event into an answer, or `null` to ignore it (a note
+   * outside the drill's range, say). A drill that `accumulate`s gets the
+   * events collected so far and answers only once the sequence is complete.
+   */
+  answerFromInput(prompt: P, event: InputEvent, collected: readonly InputEvent[]): A | null;
+  /** The answer is a sequence of notes; the session keeps collecting until `answerFromInput` returns one. */
+  accumulate?: boolean;
   check(prompt: P, answer: A): Check;
   describeAnswer(answer: A): string;
   /** Neck markers for feedback. */

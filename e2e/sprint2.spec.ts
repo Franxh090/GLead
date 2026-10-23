@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { awaitListening, currentTarget, playNotes, startSession, useFakeMic } from './helpers';
+import {
+  awaitListening,
+  currentTarget,
+  fixArms,
+  playNotes,
+  startSession,
+  useFakeMic,
+} from './helpers';
+
+test.beforeEach(async ({ page }) => fixArms(page));
 
 test.describe('B3 note against chord', () => {
   test('plays the chord tone back through the mic and tapping a tone grades too', async ({

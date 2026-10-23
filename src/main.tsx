@@ -41,7 +41,16 @@ if (fakeMicWindow.__gleadFakeMic === true) {
   );
 }
 
-void settings.load().then(() => {
+// E2E only: a spec sets `window.__gleadArms` to an arms string before the
+// app loads, so the first-run draw is deterministic.
+const armsWindow = window as { __gleadArms?: unknown };
+const fixedArms = typeof armsWindow.__gleadArms === 'string' ? armsWindow.__gleadArms : null;
+
+void (
+  fixedArms
+    ? repo.saveSettings({ experimentArm: fixedArms }).then(() => settings.load())
+    : settings.load()
+).then(() => {
   createRoot(document.getElementById('root') as HTMLElement).render(
     <StrictMode>
       <AppContext value={services}>

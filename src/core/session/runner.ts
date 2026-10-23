@@ -22,6 +22,7 @@ import { keyLabel, type MusicalKey } from '../../vendor/fretfree/theory';
 import type { Settings } from '../events/db';
 import { newId } from '../events/ids';
 import type { Repo } from '../events/repo';
+import { decodeArms, trialConditions } from '../experiments';
 import { isUnseenKey, nextKey } from '../keys';
 import { retryIndex, type PlanEntry } from '../scheduling/plan';
 import type {
@@ -64,6 +65,11 @@ export interface RunnerState {
   key: MusicalKey | null;
   feedback: Feedback<unknown> | null;
   pending: Pending | null;
+  /** Events collected so far by a drill that takes a sequence. */
+  collected: InputEvent[];
+  /** This trial's conditions, drawn from the experiment arms. */
+  imagineFirst: boolean;
+  feedbackVariant: 'full' | 'faded';
   trials: number;
   correct: number;
   byKey: Record<string, KeyTally>;
@@ -131,6 +137,9 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
     key: null,
     feedback: null,
     pending: null,
+    collected: [],
+    imagineFirst: deps.settings.imagineFirst,
+    feedbackVariant: 'full',
     trials: 0,
     correct: 0,
     byKey: {},
@@ -151,7 +160,7 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
     set({ phase: 'prompting', pending: null });
     await deps.play(audioOf());
     if (gen !== generation) return;
-    if (deps.settings.imagineFirst) {
+    if (state.imagineFirst) {
       set({ phase: 'imagining' });
       await deps.wait(deps.settings.imagineMs);
       if (gen !== generation) return;
@@ -180,7 +189,23 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
     };
     const prompt = drill.makePrompt(entry.item, ctx);
     const gen = ++generation;
-    set({ index, total: plan.length, entry, drill, prompt, key, feedback: null, pending: null });
+    const conditions = trialConditions(
+      decodeArms(deps.settings.experimentArm),
+      deps.settings,
+      deps.rng,
+    );
+    set({
+      index,
+      total: plan.length,
+      entry,
+      drill,
+      prompt,
+      key,
+      feedback: null,
+      pending: null,
+      collected: [],
+      ...conditions,
+    });
     await present(gen);
   };
 
@@ -222,8 +247,8 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
       responseMs: raw,
       confidence: event.confidence,
       rating,
-      imagineFirst: deps.settings.imagineFirst,
-      feedbackVariant: 'full',
+      imagineFirst: state.imagineFirst,
+      feedbackVariant: state.feedbackVariant,
       experimentArm: deps.settings.experimentArm,
       retest: deps.retest ?? 'none',
       unseenKey: isUnseenKey(key),
@@ -237,7 +262,7 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
     }
     tally(state.byKey, keyLabel(key), check.correct);
     tally(state.byItem, entry.item.id, check.correct);
-    const feedback: Feedback<unknown> = { answer, mode, check };
+    const feedback: Feedback<unknown> = { answer, mode, check, variant: state.feedbackVariant };
     set({
       phase: 'feedback',
       feedback,
@@ -269,9 +294,17 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
     input(event) {
       if (state.phase !== 'listening' || !state.drill) return;
       if (event.at < listenFrom) return; // the speaker, or a note already ringing
-      const answer = state.drill.answerFromInput(state.prompt, event);
-      if (answer === null) return;
-      if (event.kind === 'play' && event.confidence < deps.settings.confirmBelow) {
+      const answer = state.drill.answerFromInput(state.prompt, event, state.collected);
+      if (answer === null) {
+        // A sequence drill keeps what it heard; a one-note drill ignored the event.
+        if (state.drill.accumulate) set({ collected: [...state.collected, event] });
+        return;
+      }
+      if (
+        event.kind === 'play' &&
+        !state.drill.accumulate &&
+        event.confidence < deps.settings.confirmBelow
+      ) {
         set({
           phase: 'confirming',
           pending: {

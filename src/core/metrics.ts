@@ -97,3 +97,102 @@ export function placementBaseline(trials: readonly TrialEvent[]): Record<string,
 export function practiceOnly(trials: readonly TrialEvent[]): TrialEvent[] {
   return trials.filter((t) => (t.purpose ?? 'practice') === 'practice');
 }
+
+// --- Per-skill report (PRD D4) --------------------------------------------
+
+export interface SkillReport {
+  skillId: string;
+  baseline: Tally;
+  practice: Tally;
+  /** Accuracy over the last `window` practice trials. */
+  recent: number | null;
+  trialsToCriterion: number | null;
+  /** Accuracy gain per 100 practice trials, from a straight line through the running accuracy. */
+  learningRate: number | null;
+  retests: Record<'1d' | '7d' | '30d', Tally>;
+  transfer: Tally;
+}
+
+/** Least-squares slope of accuracy against trial index, per 100 trials, over a rolling window. */
+export function learningRate(trials: readonly TrialEvent[], window = 10): number | null {
+  if (trials.length < window * 2) return null;
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = window; i <= trials.length; i++) {
+    const slice = trials.slice(i - window, i);
+    xs.push(i);
+    ys.push(slice.filter((t) => t.correct).length / window);
+  }
+  const n = xs.length;
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (xs[i]! - mx) * (ys[i]! - my);
+    den += (xs[i]! - mx) ** 2;
+  }
+  return den === 0 ? null : (num / den) * 100;
+}
+
+export function skillReport(
+  trials: readonly TrialEvent[],
+  skillId: string,
+  window = 20,
+): SkillReport {
+  const mine = trials.filter((t) => t.skillId === skillId);
+  const practice = practiceOnly(mine).filter((t) => t.retest === 'none');
+  const recentSlice = practice.slice(-window);
+  return {
+    skillId,
+    baseline: tallyAll(mine.filter((t) => t.purpose === 'placement')),
+    practice: tallyAll(practice),
+    recent: recentSlice.length >= Math.min(window, 5) ? accuracyOf(tallyAll(recentSlice)) : null,
+    trialsToCriterion: trialsToCriterion(practice, skillId, { window }),
+    learningRate: learningRate(practice),
+    retests: delayed(mine),
+    transfer: transfer(mine),
+  };
+}
+
+// --- Experiments (PRD §6) ---------------------------------------------------
+
+export interface ArmComparison {
+  question: string;
+  arms: { label: string; tally: Tally }[];
+}
+
+/** Accuracy by arm for each built-in experiment, from the trial log. */
+export function experimentReport(trials: readonly TrialEvent[]): ArmComparison[] {
+  const practice = practiceOnly(trials).filter(
+    (t) => t.retest === 'none' && t.drillId !== 'c1-changes',
+  );
+  const by = <K extends string>(
+    keyOf: (t: TrialEvent) => K,
+    labels: Record<K, string>,
+  ): { label: string; tally: Tally }[] =>
+    (Object.entries(labels) as [K, string][]).map(([k, label]) => ({
+      label,
+      tally: tallyAll(practice.filter((t) => keyOf(t) === k)),
+    }));
+  return [
+    {
+      question: 'Does a silent beat to imagine the note first help?',
+      arms: by((t) => (t.imagineFirst ? 'on' : 'off'), {
+        on: 'Imagine first',
+        off: 'Play at once',
+      }),
+    },
+    {
+      question: 'Does less feedback after a right answer hurt or help?',
+      arms: by((t) => t.feedbackVariant, { full: 'Full feedback', faded: 'Faded feedback' }),
+    },
+    {
+      question: 'Numbers or moveable-do?',
+      arms: by((t) => (t.experimentArm.includes('labels=moveable-do') ? 'do' : 'num'), {
+        num: 'Numbers',
+        do: 'Moveable-do',
+      }),
+    },
+  ];
+}

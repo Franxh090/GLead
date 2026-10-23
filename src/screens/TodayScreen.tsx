@@ -16,6 +16,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
   const [due, setDue] = useState<number | null>(null);
   const [placed, setPlaced] = useState<boolean | null>(null);
   const [retests, setRetests] = useState<RetestRecord[]>([]);
+  const [lastReflection, setLastReflection] = useState<string>('');
 
   useEffect(() => {
     void (async () => {
@@ -25,6 +26,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
       setDue(cards.filter((c) => s.isDue(c, now)).length);
       const sessions = await app.repo.sessions();
       setPlaced(sessions.some((x) => x.kind === 'placement'));
+      setLastReflection([...sessions].reverse().find((x) => x.reflection.trim())?.reflection ?? '');
       setRetests(await app.repo.retests());
     })();
   }, [app]);
@@ -81,6 +83,11 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
           </button>
         </div>
       ))}
+      {lastReflection && (
+        <p className={styles.muted}>
+          Last time you wrote: <q>{lastReflection}</q>
+        </p>
+      )}
       {dueNow.length === 0 && upcoming && (
         <p className={styles.muted}>
           Next retest: {skillById(upcoming.skillId).title} on {upcoming.dueAt.toLocaleDateString()}.

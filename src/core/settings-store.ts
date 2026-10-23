@@ -5,6 +5,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_SETTINGS, type Settings } from './events/db';
+import { assignArms, encodeArms } from './experiments';
 import type { Repo } from './events/repo';
 
 export interface SettingsStore {
@@ -40,6 +41,14 @@ export function createSettingsStore(repo: Repo): SettingsStore {
     getState: () => ({ settings: { soundOn: settings.soundOn, volume: settings.volume } }),
     async load() {
       settings = await repo.getSettings();
+      // First run: draw the learner's experiment arms once (PRD §6).
+      if (settings.experimentArm === 'default') {
+        const arms = assignArms(Math.random);
+        settings = await repo.saveSettings({
+          experimentArm: encodeArms(arms),
+          labelScheme: arms.labels,
+        });
+      }
       loaded = true;
       emit();
       return settings;
