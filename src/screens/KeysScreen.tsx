@@ -3,7 +3,6 @@ import { Fretboard } from '../vendor/fretfree/fretboard/Fretboard';
 import {
   diatonicChords,
   functionOf,
-  getTuning,
   keyName,
   midiAt,
   midiToFretNote,
@@ -34,6 +33,7 @@ import type { InputEvent } from '../core/types';
 import { WHY_CARDS, capoHelper, keyNeighbours } from '../core/whycards';
 import { chordFromNumeral } from '../vendor/fretfree/theory';
 import styles from '../styles/app.module.css';
+import { getTuning } from '../core/tunings';
 
 const MAJOR_KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
 const MINOR_KEYS = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'Ebm', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];
@@ -86,7 +86,12 @@ export function KeysScreen() {
     const name = midiToFretNote(midi, settings.accidentalPref).name;
     const d = degreeAt(key, midi);
     setHeard(
-      `${displayPc(name)}: ${d ? `degree ${degreeLabel(d, settings.labelScheme, key.mode)}` : 'not in the key'}`,
+      d
+        ? t('keys.heardDegree', {
+            note: displayPc(name),
+            degree: degreeLabel(d, settings.labelScheme, key.mode),
+          })
+        : t('keys.heardOut', { note: displayPc(name) }),
     );
     void playScript([{ type: 'notes', notes: [name], durationS: 1.2 }]);
   };
@@ -94,14 +99,11 @@ export function KeysScreen() {
   return (
     <div className={styles.card}>
       <h2>{t('keys.title')}</h2>
-      <p className={styles.muted}>
-        The key on the neck: its scale by degree, its chords by number and job. Tap anything to hear
-        it. Tap a chord to see its tones and three places to play it.
-      </p>
+      <p className={styles.muted}>{t('keys.blurb')}</p>
       <div className={styles.field}>
-        <span>Key</span>
+        <span>{t('keys.key')}</span>
         <div className={styles.row}>
-          <div className={styles.row} role="group" aria-label="Mode">
+          <div className={styles.row} role="group" aria-label={t('keys.mode')}>
             {(['major', 'minor'] as const).map((m) => (
               <button
                 key={m}
@@ -113,12 +115,12 @@ export function KeysScreen() {
                   setChordIndex(null);
                 }}
               >
-                {m}
+                {t(`keys.${m}`)}
               </button>
             ))}
           </div>
           <select
-            aria-label="Tonic"
+            aria-label={t('keys.tonic')}
             value={tonic[mode]}
             onChange={(e) => {
               setTonic({ ...tonic, [mode]: e.target.value });
@@ -135,15 +137,15 @@ export function KeysScreen() {
         </div>
       </div>
       <div className={styles.field}>
-        <span>Chords</span>
-        <div className={styles.row} role="group" aria-label="Chord size">
+        <span>{t('keys.chords')}</span>
+        <div className={styles.row} role="group" aria-label={t('keys.chordSize')}>
           <button
             type="button"
             className={`${styles.button} ${!sevenths ? styles.primary : ''}`}
             aria-pressed={!sevenths}
             onClick={() => setSevenths(false)}
           >
-            triads
+            {t('keys.triads')}
           </button>
           <button
             type="button"
@@ -151,17 +153,17 @@ export function KeysScreen() {
             aria-pressed={sevenths}
             onClick={() => setSevenths(true)}
           >
-            sevenths
+            {t('keys.sevenths')}
           </button>
         </div>
       </div>
       <div className={styles.scroll}>
-        <table className={styles.table} aria-label="Diatonic chords">
+        <table className={styles.table} aria-label={t('keys.diatonic')}>
           <thead>
             <tr>
-              <th>Numeral</th>
-              <th>Chord</th>
-              <th>Job</th>
+              <th>{t('keys.colNumeral')}</th>
+              <th>{t('keys.colChord')}</th>
+              <th>{t('keys.colJob')}</th>
             </tr>
           </thead>
           <tbody>
@@ -178,7 +180,12 @@ export function KeysScreen() {
                   </button>
                 </td>
                 <td>{displayPc(c.symbol)}</td>
-                <td className={styles.muted}>{functionOf(key, c)}</td>
+                <td className={styles.muted}>
+                  {(() => {
+                    const f = functionOf(key, c);
+                    return f ? t(`fn.${f}`) : '';
+                  })()}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -187,8 +194,11 @@ export function KeysScreen() {
       <div className={styles.row}>
         <span className={styles.muted}>
           {chord
-            ? `${describeChord(chord)}: root square, 3rd circle, 5th triangle${sevenths ? ', 7th hexagon' : ''}.`
-            : `${keyName(key)}: the scale by degree; the tonic is the square.`}
+            ? t('keys.chordLegend', {
+                chord: describeChord(chord),
+                seventh: sevenths ? t('keys.seventhLegend') : '',
+              })
+            : t('keys.scaleLegend', { key: keyName(key) })}
         </span>
         {chord && (
           <button
@@ -199,7 +209,7 @@ export function KeysScreen() {
               setHeard(null);
             }}
           >
-            Back to the scale
+            {t('keys.backScale')}
           </button>
         )}
       </div>
@@ -213,7 +223,7 @@ export function KeysScreen() {
           revealNotes
           accidentalPref={settings.accidentalPref}
           onTapCell={tapCell}
-          label="Fretboard: tap a note to hear it"
+          label={t('keys.neck')}
         />
       </div>
       {heard && (
@@ -222,11 +232,11 @@ export function KeysScreen() {
         </p>
       )}
       {chord && (
-        <section aria-label="Three places to play it">
-          <h3>Three places to play {displayPc(chord.symbol)}</h3>
+        <section aria-label={t('keys.threePlacesAria')}>
+          <h3>{t('keys.threePlaces', { chord: displayPc(chord.symbol) })}</h3>
           {zones.length === 0 ? (
             <p className={styles.muted}>
-              No CAGED shape for a {chord.quality} chord yet; its tones are on the neck above.
+              {t('keys.noShape', { quality: t(`quality.${chord.quality}`) })}
             </p>
           ) : (
             <div className={styles.row}>
@@ -239,10 +249,10 @@ export function KeysScreen() {
                   onClick={() =>
                     void playScript([{ type: 'strum', notes: shapeNotes(z), durationS: 2 }])
                   }
-                  aria-label={`${z.shape} shape at fret ${z.rootFret}, tap to hear`}
+                  aria-label={t('keys.shapeAria', { shape: z.shape, fret: z.rootFret })}
                 >
                   <span className={styles.muted}>
-                    {z.shape} shape · root on string {z.rootString}, fret {z.rootFret}
+                    {t('keys.shapeAt', { shape: z.shape, string: z.rootString, fret: z.rootFret })}
                   </span>
                   <Fretboard
                     fretRange={shapeRange(z)}
@@ -250,7 +260,7 @@ export function KeysScreen() {
                     markers={shapeMarkers(z)}
                     guideLevel={3}
                     accidentalPref={settings.accidentalPref}
-                    label={`${z.shape} shape`}
+                    label={t('keys.shapeLabel', { shape: z.shape })}
                   />
                 </button>
               ))}
@@ -300,21 +310,26 @@ export function KeysScreen() {
           )}
         </div>
       </section>
-      <section aria-label="Around the circle">
-        <h3>Around the circle</h3>
+      <section aria-label={t('keys.circle')}>
+        <h3>{t('keys.circle')}</h3>
         <p className={styles.muted}>
           {(() => {
             const n = keyNeighbours(key);
-            return `${keyName(key)}: its IV side is ${n.subdominant}, its V side is ${n.dominant}, its relative key is ${n.relative}. Neighbours share six of seven notes, which is why songs modulate to them.`;
+            return t('keys.circleText', {
+              key: keyName(key),
+              sub: n.subdominant,
+              dom: n.dominant,
+              rel: n.relative,
+            });
           })()}
         </p>
       </section>
-      <section aria-label="Capo helper">
-        <h3>Capo helper</h3>
+      <section aria-label={t('keys.capo')}>
+        <h3>{t('keys.capo')}</h3>
         <div className={styles.field}>
-          <span>A song in {keyName(key)} with the open shapes of</span>
+          <span>{t('keys.capoSong', { key: keyName(key) })}</span>
           <select
-            aria-label="Shapes key"
+            aria-label={t('keys.shapesKey')}
             value={shapesKey}
             onChange={(e) => setShapesKey(e.target.value)}
             className={styles.button}
@@ -327,14 +342,22 @@ export function KeysScreen() {
           </select>
         </div>
         <p role="status">
-          {mode === 'major'
-            ? capoHelper(tonic.major, shapesKey).text
-            : capoHelper(keyNeighbours(key).relative, shapesKey).text + ' (via the relative major)'}
+          {(() => {
+            const c = capoHelper(
+              mode === 'major' ? tonic.major : keyNeighbours(key).relative,
+              shapesKey,
+            );
+            const text =
+              c.fret === 0
+                ? t('keys.capoNone', { s: c.sounding, sh: c.shapes })
+                : t('keys.capoFret', { fret: c.fret, s: c.sounding, sh: c.shapes });
+            return mode === 'major' ? text : text + t('keys.viaRelative');
+          })()}
         </p>
       </section>
-      <section aria-label="Why it works">
-        <h3>Why it works</h3>
-        <p className={styles.muted}>Hear it first; the card opens after the sound.</p>
+      <section aria-label={t('keys.why')}>
+        <h3>{t('keys.why')}</h3>
+        <p className={styles.muted}>{t('keys.whyHint')}</p>
         <div className={styles.row}>
           {WHY_CARDS.map((c) => (
             <button
@@ -359,13 +382,13 @@ export function KeysScreen() {
                 setOpenCard(c.id);
               }}
             >
-              {c.title}
+              {t(`why.${c.id}.title`)}
             </button>
           ))}
         </div>
         {openCard && (
           <p className={styles.status} role="note">
-            {WHY_CARDS.find((c) => c.id === openCard)?.body}
+            {t(`why.${openCard}.body`)}
           </p>
         )}
       </section>

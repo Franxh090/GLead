@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createScheduler } from '../vendor/fretfree/engine/scheduler';
-import { getTuning, keyName, type MusicalKey } from '../vendor/fretfree/theory';
+import { keyName, type MusicalKey } from '../vendor/fretfree/theory';
 import { useT } from '../core/i18n';
 import { playScript, stopScript } from '../audio/player';
 import { useApp } from '../core/app-context';
@@ -21,8 +21,12 @@ import { pick } from '../core/keys';
 import { createSessionRunner, type SessionRunner } from '../core/session/runner';
 import { useSettings } from '../core/settings-store';
 import type { InputAdapter, InputEvent, RetestRecord, SessionPurpose } from '../core/types';
-import { drillForItem, modeOfItem, SKILLS, skillById } from '../drills/registry';
+import { drillForItem, modeOfItem, rationaleOf, SKILLS, skillTitle } from '../drills/registry';
+import { B4_ID, type B4Prompt } from '../drills/b4-find-melody/logic';
+import { C4Panel } from '../drills/c4-response/C4Panel';
+import { c4Trial } from '../drills/c4-response/logic';
 import styles from '../styles/app.module.css';
+import { getTuning } from '../core/tunings';
 
 export interface SessionOptions {
   minutes: number;
@@ -68,6 +72,7 @@ export function SessionScreen({
   const [reflection, setReflection] = useState('');
   const savedRef = useRef(false);
   const reflectionRef = useRef('');
+  const scheduleRef = useRef<'interleaved' | 'blocked'>('interleaved');
   const mic: InputAdapter | null = settings.micEnabled && runner ? app.mic() : null;
   const micState = useSyncExternalStore(
     (cb) => (mic ? mic.onStateChange(cb) : () => undefined),
@@ -91,6 +96,7 @@ export function SessionScreen({
         purpose === 'practice'
           ? scheduleFor(decodeArms(app.settings.get().experimentArm), new Date())
           : 'interleaved';
+      scheduleRef.current = schedule;
       const blocked = schedule === 'blocked';
       // Blocked practice keeps one key per mode for the whole session.
       const blockKey = new Map<string, MusicalKey>();
@@ -180,14 +186,16 @@ export function SessionScreen({
           }
         })();
       });
-      const titleOf = (id: string) => {
-        try {
-          return skillById(id).title;
-        } catch {
-          return id;
-        }
-      };
-      const sh = purpose === 'practice' ? sessionShape(plan, options.minutes, titleOf) : null;
+      const sh =
+        purpose === 'practice'
+          ? sessionShape(plan, options.minutes, skillTitle, {
+              reviews: (n) => t(n === 1 ? 'shape.review1' : 'shape.reviews', { n }),
+              concepts: (titles) => t('shape.new', { list: titles.join(t('shape.and')) }),
+              playAlong: (m) => t('shape.play', { n: m }),
+              short: t('shape.short'),
+              separator: ', ',
+            })
+          : null;
       setShape(sh);
       setRunner(r);
       // A practice session states its goal first and starts on the learner's tap.
@@ -197,7 +205,7 @@ export function SessionScreen({
       cancelled = true;
       stopScript();
     };
-  }, [app, options, sessionId, startedAt]);
+  }, [app, options, sessionId, startedAt, t]);
 
   // Route mic events into the runner while the session runs.
   useEffect(() => {
@@ -209,19 +217,27 @@ export function SessionScreen({
     };
   }, [runner, mic]);
 
-  // Move on by itself after a correct answer; a miss waits for the learner.
+  // After a melody is copied, the response panel takes over until Next (PRD C4).
   const state = runner?.state;
+  const purpose = options.purpose ?? 'practice';
+  const c4Active =
+    purpose === 'practice' &&
+    settings.callResponse &&
+    state?.phase === 'feedback' &&
+    state.drill?.id === B4_ID;
+  // Move on by itself after a correct answer; a miss waits for the learner.
   useEffect(() => {
-    if (!runner || state?.phase !== 'feedback' || !state.feedback?.check.correct) return;
+    if (!runner || state?.phase !== 'feedback' || !state.feedback?.check.correct || c4Active)
+      return;
     const t = setTimeout(() => void runner.advance(), 1400);
     return () => clearTimeout(t);
-  }, [runner, state?.phase, state?.feedback, state?.index]);
+  }, [runner, state?.phase, state?.feedback, state?.index, c4Active]);
 
   if (!runner || !state) return <p className={styles.muted}>{t('session.preparing')}</p>;
 
   if (shape && !goalSeen) {
     return (
-      <div className={styles.card} role="region" aria-label="Session goal">
+      <div className={styles.card} role="region" aria-label={t('session.goalAria')}>
         <h2>{t('session.goalTitle')}</h2>
         <p>{shape.goal}</p>
         <p className={styles.muted}>{t('session.goalWhy')}</p>
@@ -356,7 +372,7 @@ export function SessionScreen({
           {t('session.end')}
         </button>
       </div>
-      <p className={styles.muted}>{drill.rationale}</p>
+      <p className={styles.muted}>{rationaleOf(drill.id)}</p>
       <View
         prompt={state.prompt}
         feedback={fb}
@@ -383,7 +399,7 @@ export function SessionScreen({
               {t('session.wrong', { expected: fb.check.expected, given: fb.check.given })}
             </span>
           )}
-          {!fb.check.correct && (
+          {!fb.check.correct && !c4Active && (
             <button
               type="button"
               className={styles.button}
@@ -394,6 +410,35 @@ export function SessionScreen({
             </button>
           )}
         </div>
+      )}
+      {fb && c4Active && state.key && (
+        <C4Panel
+          key={state.index}
+          musicalKey={state.key}
+          call={(state.prompt as B4Prompt).midis}
+          tuning={getTuning(settings.tuning)}
+          handedness={settings.handedness}
+          guideLevel={settings.guideLevel}
+          accidentalPref={settings.accidentalPref}
+          labelScheme={settings.labelScheme}
+          mic={mic && micState === 'running' ? mic : null}
+          onTake={(midis, mode, responseMs) =>
+            void app.repo.logTrial(
+              c4Trial({
+                sessionId,
+                key: state.key!,
+                midis,
+                mode,
+                at: new Date(),
+                responseMs,
+                experimentArm: settings.experimentArm,
+                schedule: scheduleRef.current,
+              }),
+            )
+          }
+          onNext={() => void runner.advance()}
+          onSkip={() => void runner.advance()}
+        />
       )}
     </div>
   );

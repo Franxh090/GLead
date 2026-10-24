@@ -12,7 +12,7 @@ export interface Settings {
   key: 'singleton';
   /** Interface language (PRD D7). */
   language: 'en' | 'es';
-  /** A FretFree tuning id: `standard`, `drop-d`. */
+  /** A tuning id from `core/tunings.ts`: `standard`, `drop-d`, `dadgad`… */
   tuning: string;
   handedness: Handedness;
   accidentalPref: AccidentalPref;
@@ -23,6 +23,8 @@ export interface Settings {
   weeklyGoal: number;
   /** A silent beat between hearing and playing (PRD B6). */
   imagineFirst: boolean;
+  /** After a melody is copied, answer it with a phrase of your own (PRD C4). */
+  callResponse: boolean;
   imagineMs: number;
   guideLevel: GuideLevel;
   micEnabled: boolean;
@@ -42,6 +44,7 @@ export const DEFAULT_SETTINGS: Settings = {
   confirmBelow: 0.6,
   weeklyGoal: 0,
   imagineFirst: false,
+  callResponse: true,
   imagineMs: 1200,
   guideLevel: 3,
   micEnabled: false,

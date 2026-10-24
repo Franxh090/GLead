@@ -1,5 +1,6 @@
 /** Every drill and skill. Add a drill by adding its folder and listing it here. */
 import type { KeyMode } from '../vendor/fretfree/theory';
+import { t } from '../core/i18n';
 import type { AnyDrill, Item, Skill } from '../core/types';
 import scaleDegree from './b1-scale-degree/drill';
 import { B1_SKILLS } from './b1-scale-degree/logic';
@@ -50,6 +51,16 @@ export function skillById(id: string): Skill & { mode: KeyMode } {
   const s = SKILLS.find((x) => x.id === id);
   if (!s) throw new Error(`Unknown skill: ${id}`);
   return s;
+}
+
+/** A skill's title in the interface language; the registry's `title` stays English for the log and the tests. */
+export function skillTitle(id: string): string {
+  return t(`skill.${id}`);
+}
+
+/** A drill's rationale in the interface language (PRD D5). */
+export function rationaleOf(drillId: string): string {
+  return t(`rationale.${drillId}`);
 }
 
 export function drillForItem(item: Item): AnyDrill {

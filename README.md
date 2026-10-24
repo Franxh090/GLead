@@ -21,7 +21,7 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprints 0–7 of the plan in `docs/implementation-plan.md` are built, apart from
+Sprints 0–8 of the plan in `docs/implementation-plan.md` are built, apart from
 the parts only people can do: the four-week pilot, the teacher interviews and
 the device measurement (R2), for which the app carries its own Mic lab. What
 works today:
@@ -30,7 +30,10 @@ works today:
   chord, B4 melodies by ear and B5 spot the error, each answered on the guitar
   through the microphone or by tapping; and B8 intervals by ear with song
   hints. Feedback on the neck, a confirm prompt when the detector is unsure,
-  misses that come back, FSRS scheduling per item.
+  misses that come back, FSRS scheduling per item. After a copied melody, **call
+  and response** (C4): answer with a phrase of your own, see which notes stayed
+  in key and whether you left the pentatonic box, logged as a take and never
+  graded.
 - **Sessions with a shape**: the goal up front, reviews first, then new
   material, then a scored play-along over a loop (**Changes**) whose targets
   hide once two takes land 80%.
@@ -38,8 +41,10 @@ works today:
   each chord in three CAGED zones, circle neighbours, a capo helper, six "why
   it works" cards heard before read, and **Find my key**: play a phrase and
   see which keys fit it. **Loops** serves the PRD progressions in any key.
-- **English and Spanish**, chosen from the browser on first run and switchable
-  in Settings; **standard and drop D tuning** on every neck and in every drill.
+- **English and Spanish** on every screen, chosen from the browser on first run
+  and switchable in Settings; **eight tunings** (standard, drop D, half and
+  whole step down, drop C, DADGAD, open G, open D) on every neck and in every
+  drill.
 - **Measuring**: a placement test; retests at 1, 7 and 30 days in unseen keys
   with the skill resting until its retest; experiment arms per learner
   (imagine-first and feedback variant per trial, label scheme per learner,
@@ -50,11 +55,9 @@ works today:
   rate, then a per-skill report and the experiment arms, and loads another
   learner's export read-only. `research/R5-measurement.md`,
   `docs/pilot-kit.md` and `docs/teacher-interview-guide.md` carry the pilot.
-- 686 unit tests and 27 Playwright specs (`pnpm e2e`) pass.
+- 698 unit tests and 34 Playwright specs (`pnpm e2e`) pass.
 
-Not yet: more tunings than FretFree's two, call and response (C4), chord
-detection, real-song clips, sync. The Mic lab's text, the why-it-works cards
-and the Progress tables are still English only.
+Not yet: chord detection, real-song clips, sync.
 
 ## Install it on an iPhone
 

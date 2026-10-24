@@ -17,7 +17,7 @@ test.describe('Spanish (D7)', () => {
     await page.getByRole('button', { name: '5 min' }).click();
     await page.getByRole('button', { name: 'Empezar sesión' }).click();
     await page
-      .getByRole('region', { name: 'Session goal' })
+      .getByRole('region', { name: 'Meta de la sesión' })
       .getByRole('button', { name: 'Empezar' })
       .click();
     await expect(page.getByText(/Escucha y luego toca la nota que oíste/)).toBeVisible();

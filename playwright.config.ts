@@ -28,8 +28,7 @@ export default defineConfig({
         ...devices['iPhone 15'],
         browserName: 'chromium',
         launchOptions: {
-          executablePath:
-            process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+          executablePath: process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium',
           args: ['--autoplay-policy=no-user-gesture-required'],
         },
       },
@@ -42,8 +41,7 @@ export default defineConfig({
         // The container ships Chromium at this path; a project pinning another
         // Playwright version must not download a browser (environment note).
         launchOptions: {
-          executablePath:
-            process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+          executablePath: process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium',
           // Let the AudioContext run without a gesture, so Tone's Transport advances headless.
           args: ['--autoplay-policy=no-user-gesture-required'],
         },

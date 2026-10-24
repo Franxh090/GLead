@@ -8,15 +8,16 @@ import {
   progressionChords,
   type KeyMode,
   type MusicalKey,
-  getTuning,
 } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { createBackingLoop } from '../audio/backing-loop';
 import { LOOP_FEELS, LOOP_PROGRESSIONS, LOOP_TEMPOS, loopProgression } from '../audio/loops';
 import { useApp } from '../core/app-context';
+import { useT } from '../core/i18n';
 import { useSettings } from '../core/settings-store';
 import type { BackingLoop, BackingLoopSpec } from '../core/types';
 import styles from '../styles/app.module.css';
+import { getTuning } from '../core/tunings';
 
 const MAJOR_KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
 const MINOR_KEYS = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'Ebm', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];
@@ -34,6 +35,7 @@ const TONE_STYLE: Record<number, FretMarker['style']> = {
  * what you play over it is Sprint 3 (C1, C2).
  */
 export function LoopsScreen() {
+  const t = useT();
   const app = useApp();
   const settings = useSettings(app.settings);
   const tuning = getTuning(settings.tuning);
@@ -69,13 +71,12 @@ export function LoopsScreen() {
     try {
       ({ started } = await loop.start({ onChord: (i) => setCurrent(i) }));
     } catch (err) {
-      setNotice(`The loop could not start: ${err instanceof Error ? err.message : String(err)}`);
+      setNotice(t('loops.failed', { error: err instanceof Error ? err.message : String(err) }));
       return;
     }
     if (loopRef.current !== loop) return;
     setPlaying(started);
-    if (!started)
-      setNotice('Audio could not start. Tap Play loop again, and check the sound setting.');
+    if (!started) setNotice(t('loops.noStart'));
   };
 
   useEffect(() => () => loopRef.current?.stop(), []);
@@ -103,15 +104,12 @@ export function LoopsScreen() {
 
   return (
     <div className={styles.card}>
-      <h2>Loops</h2>
-      <p className={styles.muted}>
-        A progression in any key. The sounding chord's tones light up: roots as squares, 3rds as
-        circles, 5ths as triangles, 7ths as hexagons. Play along; scoring comes next.
-      </p>
+      <h2>{t('loops.title')}</h2>
+      <p className={styles.muted}>{t('loops.blurb')}</p>
       <div className={styles.field}>
-        <span>Progression</span>
+        <span>{t('loops.progression')}</span>
         <select
-          aria-label="Progression"
+          aria-label={t('loops.progression')}
           value={progressionId}
           onChange={(e) => change(setProgressionId)(e.target.value)}
           className={styles.button}
@@ -123,11 +121,11 @@ export function LoopsScreen() {
           ))}
         </select>
       </div>
-      <p className={styles.muted}>{progression.description}</p>
+      <p className={styles.muted}>{t(`loop.${progression.id}.desc`)}</p>
       <div className={styles.field}>
-        <span>Key</span>
+        <span>{t('loops.key')}</span>
         <select
-          aria-label="Key"
+          aria-label={t('loops.key')}
           value={tonic[progression.mode]}
           onChange={(e) => change(setTonic)({ ...tonic, [progression.mode]: e.target.value })}
           className={styles.button}
@@ -140,8 +138,8 @@ export function LoopsScreen() {
         </select>
       </div>
       <div className={styles.field}>
-        <span>Tempo</span>
-        <div className={styles.row} role="group" aria-label="Tempo">
+        <span>{t('loops.tempo')}</span>
+        <div className={styles.row} role="group" aria-label={t('loops.tempo')}>
           {LOOP_TEMPOS.map((t) => (
             <button
               key={t}
@@ -156,8 +154,8 @@ export function LoopsScreen() {
         </div>
       </div>
       <div className={styles.field}>
-        <span>Feel</span>
-        <div className={styles.row} role="group" aria-label="Feel">
+        <span>{t('loops.feel')}</span>
+        <div className={styles.row} role="group" aria-label={t('loops.feel')}>
           {LOOP_FEELS.map((f) => (
             <button
               key={f}
@@ -166,12 +164,12 @@ export function LoopsScreen() {
               aria-pressed={feel === f}
               onClick={() => change(setFeel)(f)}
             >
-              {f}
+              {t(`feel.${f}`)}
             </button>
           ))}
         </div>
       </div>
-      <div className={styles.row} role="list" aria-label="Chords">
+      <div className={styles.row} role="list" aria-label={t('loops.chords')}>
         {chords.map((c, i) => (
           <span
             key={`${c.symbol}-${i}`}
@@ -191,11 +189,11 @@ export function LoopsScreen() {
             className={`${styles.button} ${styles.primary}`}
             onClick={() => void start()}
           >
-            Play loop
+            {t('loops.play')}
           </button>
         ) : (
           <button type="button" className={styles.button} onClick={stop}>
-            Stop
+            {t('loops.stop')}
           </button>
         )}
         <span className={styles.muted}>
@@ -216,7 +214,7 @@ export function LoopsScreen() {
           guideLevel={3}
           revealNotes
           accidentalPref={settings.accidentalPref}
-          label="Fretboard: the sounding chord's tones"
+          label={t('loops.neck')}
         />
       </div>
     </div>

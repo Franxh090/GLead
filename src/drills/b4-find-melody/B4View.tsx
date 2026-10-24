@@ -51,7 +51,7 @@ export function B4View({
         canAnswer={canAnswer}
         accidentalPref={prompt.accidentalPref}
         onTap={onTap}
-        label="Fretboard: play or tap the notes you heard, in order"
+        label={t('neck.b4')}
       />
     </div>
   );

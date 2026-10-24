@@ -3,14 +3,7 @@ import type { DrillRenderProps } from '../../core/types';
 import { displayPc } from '../../vendor/fretfree/theory/pitch-display';
 import styles from '../../styles/app.module.css';
 import { AnswerNeck, ChoiceGrid, ConfirmPanel, ReplayRow, feedbackMarkers } from '../shared/parts';
-import {
-  B3_REGION,
-  TONE_NAMES,
-  b3FeedbackPositions,
-  QUALITY_WORDS,
-  type B3Answer,
-  type B3Prompt,
-} from './logic';
+import { B3_REGION, TONE_NAMES, b3FeedbackPositions, type B3Answer, type B3Prompt } from './logic';
 
 export function B3View({
   prompt,
@@ -35,7 +28,7 @@ export function B3View({
   );
   return (
     <div className={styles.card} data-target-midi={prompt.targetMidi}>
-      <p>{t('b3.question', { quality: QUALITY_WORDS[prompt.quality] ?? prompt.quality })}</p>
+      <p>{t('b3.question', { quality: t(`quality.${prompt.quality}`) })}</p>
       <ReplayRow listening={canAnswer} onReplay={onReplay} />
       <ConfirmPanel pending={pending} onConfirm={onConfirm} />
       <ChoiceGrid
@@ -57,7 +50,7 @@ export function B3View({
         canAnswer={canAnswer}
         accidentalPref={prompt.accidentalPref}
         onTap={onTap}
-        label="Fretboard: tap the note you heard"
+        label={t('neck.b1')}
       />
     </div>
   );

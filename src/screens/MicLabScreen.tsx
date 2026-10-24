@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Fretboard, type FretMarker } from '../vendor/fretfree/fretboard/Fretboard';
-import { getTuning, midiToFretNote } from '../vendor/fretfree/theory';
+import { midiToFretNote } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { playScript } from '../audio/player';
 import { useApp } from '../core/app-context';
+import { useT } from '../core/i18n';
 import {
   LATENCY,
   micLabPrompts,
@@ -14,6 +15,7 @@ import {
 import { useSettings } from '../core/settings-store';
 import type { InputAdapter, InputEvent } from '../core/types';
 import styles from '../styles/app.module.css';
+import { getTuning } from '../core/tunings';
 
 type Phase = 'intro' | 'prompts' | 'latency' | 'done';
 
@@ -26,6 +28,7 @@ const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%
  * graded or scheduled; it measures the device.
  */
 export function MicLabScreen({ onExit }: { onExit(): void }) {
+  const t = useT();
   const app = useApp();
   const settings = useSettings(app.settings);
   const tuning = getTuning(settings.tuning);
@@ -150,10 +153,10 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
   if (!mic) {
     return (
       <div className={styles.card}>
-        <h2>Mic lab</h2>
-        <p>Turn the microphone on in Settings first.</p>
+        <h2>{t('miclab.title')}</h2>
+        <p>{t('miclab.needMic')}</p>
         <button type="button" className={styles.button} onClick={onExit}>
-          Back
+          {t('miclab.back')}
         </button>
       </div>
     );
@@ -172,15 +175,10 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
 
   return (
     <div className={styles.card}>
-      <h2>Mic lab</h2>
+      <h2>{t('miclab.title')}</h2>
       {phase === 'intro' && (
         <>
-          <p>
-            About five minutes, with your guitar. Three parts: 24 notes across the neck (play each
-            one cleanly, let it ring); 8 prompts where you play the fret <strong>above</strong> the
-            one named, to see whether a wrong note gets through; then 12 clicks, one a second, and
-            you pluck any note on each click. Nothing is recorded but what the detector heard.
-          </p>
+          <p>{t('miclab.intro')}</p>
           <div className={styles.row}>
             {micState !== 'running' ? (
               <button
@@ -188,7 +186,7 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                 className={`${styles.button} ${styles.primary}`}
                 onClick={() => void mic.start().catch(() => undefined)}
               >
-                {micState === 'error' ? 'Retry microphone' : 'Start listening'}
+                {micState === 'error' ? t('session.retryMic') : t('session.startListening')}
               </button>
             ) : (
               <button
@@ -196,11 +194,11 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                 className={`${styles.button} ${styles.primary}`}
                 onClick={() => setPhase('prompts')}
               >
-                Begin the note set
+                {t('miclab.beginNotes')}
               </button>
             )}
             <button type="button" className={styles.button} onClick={onExit}>
-              Back
+              {t('miclab.back')}
             </button>
           </div>
         </>
@@ -208,13 +206,24 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
       {phase === 'prompts' && prompt && (
         <>
           <p className={styles.muted}>
-            {prompt.part === 'notes' ? 'Note' : 'Wrong note'} {prompt.index + 1} of{' '}
-            {prompt.part === 'notes' ? 24 : 8}
+            {t('miclab.of', {
+              label: t(prompt.part === 'notes' ? 'miclab.note' : 'miclab.wrongNote'),
+              n: prompt.index + 1,
+              total: prompt.part === 'notes' ? 24 : 8,
+            })}
           </p>
           <p>
             {prompt.part === 'notes'
-              ? `Play string ${prompt.position.string}, fret ${prompt.position.fret} (${displayPc(midiToFretNote(prompt.expectedMidi).name)}).`
-              : `The app names string ${prompt.position.string}, fret ${prompt.position.fret}. Play the fret ABOVE it: fret ${prompt.play.fret}.`}
+              ? t('miclab.playPrompt', {
+                  string: prompt.position.string,
+                  fret: prompt.position.fret,
+                  note: displayPc(midiToFretNote(prompt.expectedMidi).name),
+                })
+              : t('miclab.wrongPrompt', {
+                  string: prompt.position.string,
+                  fret: prompt.position.fret,
+                  play: prompt.play.fret,
+                })}
           </p>
           <div className={styles.neck}>
             <Fretboard
@@ -225,59 +234,55 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
               guideLevel={3}
               revealNotes
               accidentalPref={settings.accidentalPref}
-              label="Fretboard: the note to play"
+              label={t('miclab.neck')}
             />
           </div>
           <div className={styles.row}>
             <span className={styles.status} role="status">
-              Listening…
+              {t('drill.listening')}
             </span>
             <button type="button" className={styles.button} onClick={skip}>
-              Nothing heard, skip
+              {t('miclab.skip')}
             </button>
           </div>
         </>
       )}
       {phase === 'latency' && (
         <>
-          <p>
-            Pluck any note on each click. {clicks} of {LATENCY.clicks} clicks.
-          </p>
+          <p>{t('miclab.clicks', { n: clicks, total: LATENCY.clicks })}</p>
           <span className={styles.status} role="status">
-            Listening for plucks…
+            {t('miclab.listeningPlucks')}
           </span>
         </>
       )}
       {phase === 'done' && (
         <>
-          <h3>Results</h3>
+          <h3>{t('miclab.results')}</h3>
           <div className={styles.scroll}>
-            <table className={styles.table} aria-label="Mic lab results">
+            <table className={styles.table} aria-label={t('miclab.resultsAria')}>
               <tbody>
                 <tr>
-                  <th>Correct plays accepted (any octave)</th>
+                  <th>{t('miclab.rAccepted')}</th>
                   <td>{pct(summary.correctAccepted)}</td>
                 </tr>
                 <tr>
-                  <th>Correct plays heard at the exact pitch</th>
+                  <th>{t('miclab.rExact')}</th>
                   <td>{pct(summary.correctExact)}</td>
                 </tr>
                 <tr>
-                  <th>
-                    Correct plays that would need confirming (threshold {settings.confirmBelow})
-                  </th>
+                  <th>{t('miclab.rConfirm', { threshold: settings.confirmBelow })}</th>
                   <td>{pct(summary.confirmShare)}</td>
                 </tr>
                 <tr>
-                  <th>Wrong plays accepted as the named note</th>
+                  <th>{t('miclab.rWrong')}</th>
                   <td>{pct(summary.wrongAccepted)}</td>
                 </tr>
                 <tr>
-                  <th>Prompts with nothing heard</th>
+                  <th>{t('miclab.rSilent')}</th>
                   <td>{summary.silent}</td>
                 </tr>
                 <tr>
-                  <th>Latency, click to stable note (median, spread)</th>
+                  <th>{t('miclab.rLatency')}</th>
                   <td>
                     {summary.medianLatencyMs === null
                       ? '—'
@@ -288,14 +293,14 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                   </td>
                 </tr>
                 <tr>
-                  <th>Suggested confirm threshold (nine in ten correct plays pass)</th>
+                  <th>{t('miclab.rSuggested')}</th>
                   <td>{summary.suggestedConfirmBelow ?? '—'}</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <details>
-            <summary>Every note</summary>
+            <summary>{t('miclab.every')}</summary>
             <div className={styles.scroll}>
               <table className={styles.table}>
                 <tbody>
@@ -307,7 +312,7 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                       </td>
                       <td>
                         {r.heardMidi === null
-                          ? 'nothing'
+                          ? t('miclab.nothing')
                           : displayPc(midiToFretNote(r.heardMidi).name)}
                       </td>
                       <td>{r.cents === null ? '' : `${Math.round(r.cents)} c`}</td>
@@ -326,7 +331,7 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
               disabled={saved}
               onClick={() => void save()}
             >
-              {saved ? 'Saved' : 'Save this run'}
+              {saved ? t('miclab.saved') : t('miclab.save')}
             </button>
             {summary.suggestedConfirmBelow !== null &&
               summary.suggestedConfirmBelow !== settings.confirmBelow && (
@@ -339,18 +344,14 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                     })
                   }
                 >
-                  Use {summary.suggestedConfirmBelow} as the threshold
+                  {t('miclab.use', { n: summary.suggestedConfirmBelow })}
                 </button>
               )}
             <button type="button" className={styles.button} onClick={onExit}>
-              Back to Settings
+              {t('miclab.backSettings')}
             </button>
           </div>
-          <p className={styles.muted}>
-            Saved runs go out with your export, so R2 can compare devices. The suggestion is the
-            confidence nine in ten of your correct plays reached; below it the app asks you to
-            confirm.
-          </p>
+          <p className={styles.muted}>{t('miclab.footer')}</p>
         </>
       )}
     </div>

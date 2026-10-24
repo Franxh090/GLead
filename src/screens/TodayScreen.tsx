@@ -3,7 +3,7 @@ import { createScheduler } from '../vendor/fretfree/engine/scheduler';
 import { useApp } from '../core/app-context';
 import { useSettings } from '../core/settings-store';
 import { useT } from '../core/i18n';
-import { SKILLS, skillById } from '../drills/registry';
+import { SKILLS, skillTitle } from '../drills/registry';
 import { dueRetests, nextRetest, restingSkills } from '../core/scheduling/retests';
 import { decodeArms, scheduleFor } from '../core/experiments';
 import type { RetestRecord } from '../core/types';
@@ -58,7 +58,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
     <div className={styles.card}>
       <h2>{t('today.title')}</h2>
       {placed === false && (
-        <div className={styles.status} role="region" aria-label="Placement">
+        <div className={styles.status} role="region" aria-label={t('today.placementAria')}>
           <p>
             <strong>{t('today.placementTitle')}</strong>
             {t('today.placementBody')}
@@ -79,12 +79,12 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
           key={r.id ?? `${r.skillId}-${r.delay}`}
           className={styles.status}
           role="region"
-          aria-label="Retest due"
+          aria-label={t('today.retestAria')}
         >
           <p>
             <strong>{t('today.retestDue')}</strong>{' '}
             {t('today.retestBody', {
-              skill: skillById(r.skillId).title,
+              skill: skillTitle(r.skillId),
               days: r.delay.replace('d', ''),
             })}
           </p>
@@ -112,7 +112,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
       {dueNow.length === 0 && upcoming && (
         <p className={styles.muted}>
           {t('today.nextRetest', {
-            skill: skillById(upcoming.skillId).title,
+            skill: skillTitle(upcoming.skillId),
             date: upcoming.dueAt.toLocaleDateString(),
           })}
         </p>
@@ -122,7 +122,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
       </p>
       <div className={styles.field}>
         <span>{t('today.length')}</span>
-        <div className={styles.row} role="group" aria-label="Session length">
+        <div className={styles.row} role="group" aria-label={t('today.lengthAria')}>
           {[5, 10, 20].map((m) => (
             <button
               key={m}
@@ -138,7 +138,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
       </div>
       <div className={styles.field}>
         <span>{t('today.skills')}</span>
-        <div className={styles.row} role="group" aria-label="Skills">
+        <div className={styles.row} role="group" aria-label={t('today.skills')}>
           {SKILLS.map((sk) => (
             <button
               key={sk.id}
@@ -149,7 +149,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
               title={resting.has(sk.id) ? t('today.restingHint') : undefined}
               onClick={() => toggleSkill(sk.id)}
             >
-              {sk.title}
+              {skillTitle(sk.id)}
               {resting.has(sk.id) ? t('today.resting') : ''}
             </button>
           ))}

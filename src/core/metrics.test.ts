@@ -5,6 +5,7 @@ import {
   delayed,
   experimentReport,
   learningRate,
+  responseInKeyRate,
   skillReport,
   tallyBy,
   targetsByDefault,
@@ -100,12 +101,24 @@ describe('metrics', () => {
     const report = experimentReport(trials);
     expect(report).toHaveLength(4);
     expect(report[0]?.arms[0]).toEqual({
+      id: 'on',
       label: 'Imagine first',
       tally: { trials: 1, correct: 1 },
     });
     expect(report[1]?.arms[1]?.tally).toEqual({ trials: 1, correct: 1 });
     expect(report[3]?.arms[1]?.tally.trials).toBe(1);
     expect(report[2]?.arms[0]?.tally.trials).toBe(4);
+  });
+
+  it('counts call-and-response takes apart from the graded trials', () => {
+    const trials = [
+      t({ drillId: 'c4-response', skillId: 'C4.response', correct: true }),
+      t({ drillId: 'c4-response', skillId: 'C4.response', correct: false }),
+      t({ correct: true }),
+    ];
+    expect(responseInKeyRate(trials)).toEqual({ trials: 2, correct: 1 });
+    const graded = experimentReport(trials)[0]!.arms.reduce((n, a) => n + a.tally.trials, 0);
+    expect(graded).toBe(1);
   });
 
   it('hides the targets once two takes in a row land 80%', () => {

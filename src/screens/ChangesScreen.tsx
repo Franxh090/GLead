@@ -9,12 +9,12 @@ import {
   positionsOfPitchClass,
   progressionChords,
   type MusicalKey,
-  getTuning,
 } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { createBackingLoop } from '../audio/backing-loop';
 import { LOOP_PROGRESSIONS, LOOP_TEMPOS, loopProgression } from '../audio/loops';
 import { useApp } from '../core/app-context';
+import { useT } from '../core/i18n';
 import { newId } from '../core/events/ids';
 import { isUnseenKey, unseenKeys, pick } from '../core/keys';
 import {
@@ -30,6 +30,7 @@ import { useSettings } from '../core/settings-store';
 import type { BackingLoop, InputAdapter, TrialEvent } from '../core/types';
 import { TONE_NAMES, type ChordTone } from '../drills/b3-chord-tone/logic';
 import styles from '../styles/app.module.css';
+import { getTuning } from '../core/tunings';
 
 const MAJOR_KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
 const MINOR_KEYS = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'Ebm', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];
@@ -42,8 +43,6 @@ const TONE_STYLE: Record<string, FretMarker['style']> = {
 const PASSES = [1, 2, 4] as const;
 
 export const CHANGES_DRILL_ID = 'c1-changes';
-export const CHANGES_RATIONALE =
-  'Lines sound like music when they land on a chord tone at the change. Roots first, then 3rds, then 5ths and 7ths: each rung is a sound you can hear, and the mic tells you whether you landed.';
 
 type TakeState = 'idle' | 'playing' | 'done';
 
@@ -66,6 +65,7 @@ export function rungForSkills(skillIds: readonly string[]): Rung {
 }
 
 export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null }) {
+  const t = useT();
   const app = useApp();
   const settings = useSettings(app.settings);
   const tuning = getTuning(settings.tuning);
@@ -190,12 +190,12 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
         },
       }));
     } catch (err) {
-      setNotice(`The loop could not start: ${err instanceof Error ? err.message : String(err)}`);
+      setNotice(t('loops.failed', { error: err instanceof Error ? err.message : String(err) }));
       return;
     }
     if (loopRef.current !== loop) return;
     if (!started) {
-      setNotice('Audio could not start. Tap Start take again, and check the sound setting.');
+      setNotice(t('changes.noStart'));
       return;
     }
     setTake('playing');
@@ -241,20 +241,19 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
 
   return (
     <div className={styles.card}>
-      <h2>Changes</h2>
+      <h2>{t('changes.title')}</h2>
       {preset && (
         <p className={styles.status} role="status">
-          Your session's play-along: {passes} passes, landing on{' '}
-          {RUNGS.find((r) => r.id === rung)?.title.toLowerCase()}.
+          {t('changes.preset', { passes, rung: t(`rung.${rung}.title`).toLowerCase() })}
         </p>
       )}
-      <p className={styles.muted}>{CHANGES_RATIONALE}</p>
+      <p className={styles.muted}>{t('rationale.c1-changes')}</p>
       {take !== 'playing' && (
         <>
           <div className={styles.field}>
-            <span>Progression</span>
+            <span>{t('loops.progression')}</span>
             <select
-              aria-label="Progression"
+              aria-label={t('loops.progression')}
               value={progressionId}
               onChange={(e) => setProgressionId(e.target.value)}
               className={styles.button}
@@ -267,10 +266,10 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             </select>
           </div>
           <div className={styles.field}>
-            <span>Key</span>
+            <span>{t('loops.key')}</span>
             <div className={styles.row}>
               <select
-                aria-label="Key"
+                aria-label={t('loops.key')}
                 value={tonic[progression.mode]}
                 disabled={surprise}
                 onChange={(e) => setTonic({ ...tonic, [progression.mode]: e.target.value })}
@@ -286,17 +285,17 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
                 type="button"
                 role="switch"
                 aria-checked={surprise}
-                aria-label="Surprise me with a key I have not practised"
+                aria-label={t('changes.surpriseAria')}
                 className={`${styles.button} ${surprise ? styles.primary : ''}`}
                 onClick={() => setSurprise(!surprise)}
               >
-                Surprise key
+                {t('changes.surprise')}
               </button>
             </div>
           </div>
           <div className={styles.field}>
-            <span>Tempo</span>
-            <div className={styles.row} role="group" aria-label="Tempo">
+            <span>{t('loops.tempo')}</span>
+            <div className={styles.row} role="group" aria-label={t('loops.tempo')}>
               {LOOP_TEMPOS.map((t) => (
                 <button
                   key={t}
@@ -311,8 +310,8 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             </div>
           </div>
           <div className={styles.field}>
-            <span>Rung</span>
-            <div className={styles.row} role="group" aria-label="Rung">
+            <span>{t('changes.rung')}</span>
+            <div className={styles.row} role="group" aria-label={t('changes.rung')}>
               {RUNGS.map((r) => (
                 <button
                   key={r.id}
@@ -321,15 +320,15 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
                   aria-pressed={rung === r.id}
                   onClick={() => setRung(r.id)}
                 >
-                  {r.title}
+                  {t(`rung.${r.id}.title`)}
                 </button>
               ))}
             </div>
           </div>
-          <p className={styles.muted}>{RUNGS.find((r) => r.id === rung)?.hint}</p>
+          <p className={styles.muted}>{t(`rung.${rung}.hint`)}</p>
           <div className={styles.field}>
-            <span>Passes</span>
-            <div className={styles.row} role="group" aria-label="Passes">
+            <span>{t('changes.passes')}</span>
+            <div className={styles.row} role="group" aria-label={t('changes.passes')}>
               {PASSES.map((n) => (
                 <button
                   key={n}
@@ -344,20 +343,20 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             </div>
           </div>
           <div className={styles.field}>
-            <span>Show the targets on the neck</span>
+            <span>{t('changes.showTargets')}</span>
             <button
               type="button"
               role="switch"
               aria-checked={targetsOn}
-              aria-label="Show the targets on the neck"
+              aria-label={t('changes.showTargets')}
               className={`${styles.button} ${targetsOn ? styles.primary : ''}`}
               onClick={() => {
                 setTargetsTouched(true);
                 setShowTargets(!targetsOn);
               }}
             >
-              {targetsOn ? 'On' : 'Off'}
-              {!targetsTouched && !suggestedTargets ? ' (hidden: you landed two takes)' : ''}
+              {targetsOn ? t('settings.on') : t('settings.off')}
+              {!targetsTouched && !suggestedTargets ? t('changes.hiddenNote') : ''}
             </button>
           </div>
         </>
@@ -369,11 +368,11 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             className={`${styles.button} ${styles.primary}`}
             onClick={() => void start()}
           >
-            Start take
+            {t('changes.start')}
           </button>
         ) : (
           <button type="button" className={styles.button} onClick={finish}>
-            Stop
+            {t('loops.stop')}
           </button>
         )}
         {mic && micState !== 'running' && (
@@ -382,15 +381,15 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             className={styles.button}
             onClick={() => void mic.start().catch(() => undefined)}
           >
-            {micState === 'error' ? 'Retry microphone' : 'Start listening'}
+            {micState === 'error' ? t('session.retryMic') : t('session.startListening')}
           </button>
         )}
         {mic && micState === 'running' && (
           <span className={styles.status} role="status">
-            Mic on
+            {t('session.micOn')}
           </span>
         )}
-        {!mic && <span className={styles.muted}>Mic off: tap the neck at each change.</span>}
+        {!mic && <span className={styles.muted}>{t('changes.micOff')}</span>}
         {notice && (
           <span className={styles.status} role="status">
             {notice}
@@ -398,7 +397,7 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
         )}
       </div>
       {take === 'playing' && (
-        <div className={styles.row} role="list" aria-label="Chords">
+        <div className={styles.row} role="list" aria-label={t('loops.chords')}>
           {chords.map((c, i) => (
             <span
               key={`${c.symbol}-${i}`}
@@ -426,28 +425,29 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
               ? (p) => scorerRef.current?.onNote(midiAt(p, tuning), performance.now())
               : undefined
           }
-          label="Fretboard: play or tap a chord tone at each change"
+          label={t('changes.neck')}
         />
       </div>
       {take === 'done' && (
-        <div className={styles.card} aria-label="Take result">
+        <div className={styles.card} aria-label={t('changes.takeResult')}>
           <h3>
-            Take: {rate === null ? '—' : `${Math.round(rate * 100)}%`} of changes on a chord tone
+            {t('changes.takeTitle', {
+              pct: rate === null ? '—' : `${Math.round(rate * 100)}%`,
+            })}
           </h3>
           <p className={styles.muted}>
             {keyName(key)}
-            {isUnseenKey(key) ? ' (an unseen key: this counts as transfer)' : ''} ·{' '}
-            {RUNGS.find((r) => r.id === rung)?.title}
+            {isUnseenKey(key) ? t('changes.unseen') : ''} · {t(`rung.${rung}.title`)}
           </p>
           <div className={styles.scroll}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Change</th>
-                  <th>Chord</th>
-                  <th>Wanted</th>
-                  <th>Played</th>
-                  <th>Timing</th>
+                  <th>{t('changes.colChange')}</th>
+                  <th>{t('changes.colChord')}</th>
+                  <th>{t('changes.colWanted')}</th>
+                  <th>{t('changes.colPlayed')}</th>
+                  <th>{t('changes.colTiming')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -455,13 +455,13 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
                   <tr key={r.bar}>
                     <td>{r.bar}</td>
                     <td>{displayPc(r.chord)}</td>
-                    <td>{r.wanted.map((t) => TONE_NAMES[t]).join(' / ')}</td>
+                    <td>{r.wanted.map((w) => t(`tone.${TONE_NAMES[w]}`)).join(' / ')}</td>
                     <td className={r.outcome === 'hit' ? styles.ok : styles.bad}>
                       {r.outcome === 'silent'
-                        ? 'nothing'
+                        ? t('changes.nothing')
                         : r.tone
-                          ? TONE_NAMES[r.tone as ChordTone]
-                          : 'not a chord tone'}
+                          ? t(`tone.${TONE_NAMES[r.tone as ChordTone]}`)
+                          : t('changes.notTone')}
                     </td>
                     <td className={styles.muted}>
                       {r.offsetMs === null

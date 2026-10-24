@@ -3,8 +3,8 @@ import { useApp } from '../core/app-context';
 import { decodeArms } from '../core/experiments';
 import { useSettings } from '../core/settings-store';
 import { LANGUAGES, useT } from '../core/i18n';
-import { TUNINGS } from '../vendor/fretfree/theory';
 import styles from '../styles/app.module.css';
+import { TUNINGS } from '../core/tunings';
 
 function Toggle({
   label,
@@ -42,19 +42,23 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
 
   const testMic = async () => {
     const mic = app.mic();
-    setMicCheck('Asking for the microphone…');
+    setMicCheck(t('settings.micAsking'));
     try {
       await mic.start();
-      setMicCheck('Microphone works. Play a note to see it.');
+      setMicCheck(t('settings.micWorks'));
       const off = mic.onEvent((e) => {
-        setMicCheck(`Heard MIDI ${e.midi} at ${Math.round(e.confidence * 100)}% confidence.`);
+        setMicCheck(
+          t('settings.micHeard', { midi: e.midi ?? '?', pct: Math.round(e.confidence * 100) }),
+        );
       });
       setTimeout(() => {
         off();
         mic.stop();
       }, 8000);
     } catch (err) {
-      setMicCheck(`Microphone failed: ${err instanceof Error ? err.message : String(err)}`);
+      setMicCheck(
+        t('settings.micFailed', { error: err instanceof Error ? err.message : String(err) }),
+      );
     }
   };
 
@@ -111,16 +115,14 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         </div>
       )}
       <div className={styles.field}>
-        <span>
-          Ask me to confirm when the mic is less than {Math.round(s.confirmBelow * 100)}% sure
-        </span>
+        <span>{t('settings.confirm', { pct: Math.round(s.confirmBelow * 100) })}</span>
         <input
           type="range"
           min={0}
           max={1}
           step={0.05}
           value={s.confirmBelow}
-          aria-label="Confirm threshold"
+          aria-label={t('settings.confirmAria')}
           onChange={(e) => void app.settings.update({ confirmBelow: Number(e.target.value) })}
         />
       </div>
@@ -129,9 +131,14 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         value={s.imagineFirst}
         onChange={(v) => void app.settings.update({ imagineFirst: v })}
       />
+      <Toggle
+        label={t('settings.callResponse')}
+        value={s.callResponse}
+        onChange={(v) => void app.settings.update({ callResponse: v })}
+      />
       <div className={styles.field}>
         <span>{t('settings.labels')}</span>
-        <div className={styles.row} role="group" aria-label="Degree labels">
+        <div className={styles.row} role="group" aria-label={t('settings.labels')}>
           {(['numbers', 'moveable-do'] as const).map((l) => (
             <button
               key={l}
@@ -147,7 +154,7 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
       </div>
       <div className={styles.field}>
         <span>{t('settings.neck')}</span>
-        <div className={styles.row} role="group" aria-label="Handedness">
+        <div className={styles.row} role="group" aria-label={t('settings.neck')}>
           {(['right', 'left'] as const).map((h) => (
             <button
               key={h}
@@ -156,14 +163,14 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
               aria-pressed={s.handedness === h}
               onClick={() => void app.settings.update({ handedness: h })}
             >
-              {h}-handed
+              {t(`settings.${h}Handed`)}
             </button>
           ))}
         </div>
       </div>
       <div className={styles.field}>
         <span>{t('settings.accidentals')}</span>
-        <div className={styles.row} role="group" aria-label="Accidentals">
+        <div className={styles.row} role="group" aria-label={t('settings.accidentals')}>
           {(['sharp', 'flat'] as const).map((a) => (
             <button
               key={a}
@@ -183,38 +190,43 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         onChange={(v) => void app.settings.update({ soundOn: v })}
       />
       <div className={styles.field}>
-        <span>Weekly goal: {s.weeklyGoal === 0 ? 'off' : `${s.weeklyGoal} sessions`}</span>
+        <span>
+          {t('settings.goal', {
+            goal:
+              s.weeklyGoal === 0 ? t('settings.goalOff') : t('settings.goalN', { n: s.weeklyGoal }),
+          })}
+        </span>
         <input
           type="range"
           min={0}
           max={7}
           step={1}
           value={s.weeklyGoal}
-          aria-label="Weekly goal in sessions"
+          aria-label={t('settings.goalAria')}
           onChange={(e) => void app.settings.update({ weeklyGoal: Number(e.target.value) })}
         />
       </div>
+      <p className={styles.muted}>{t('settings.goalNote')}</p>
+      <h3>{t('settings.arms')}</h3>
       <p className={styles.muted}>
-        A goal counts sessions; it never changes what the schedule asks you to practise.
-      </p>
-      <h3>Your experiment arms</h3>
-      <p className={styles.muted}>
-        Drawn once at first run (PRD §6):{' '}
         {(() => {
           const a = decodeArms(s.experimentArm);
-          return `imagine-first ${a.imagine === 'random' ? 'at random per trial' : 'as set above'}; feedback ${a.feedback === 'random' ? 'full or faded at random per trial' : 'always full'}; labels started as ${a.labels}.`;
-        })()}{' '}
-        Progress compares the arms.
+          return t('settings.armsText', {
+            imagine: a.imagine === 'random' ? t('settings.armRandom') : t('settings.armSetting'),
+            feedback:
+              a.feedback === 'random'
+                ? t('settings.armFeedbackRandom')
+                : t('settings.armFeedbackFull'),
+            labels: a.labels,
+          });
+        })()}
       </p>
       <h3>{t('settings.data')}</h3>
-      <p className={styles.muted}>
-        Everything stays on this device: results and settings only, never audio. Export it from
-        Progress.
-      </p>
+      <p className={styles.muted}>{t('settings.dataNote')}</p>
       <div className={styles.row}>
         {!confirmReset ? (
           <button type="button" className={styles.button} onClick={() => setConfirmReset(true)}>
-            Delete all my data…
+            {t('settings.delete')}
           </button>
         ) : (
           <>
@@ -228,10 +240,10 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
                   .then(() => setConfirmReset(false))
               }
             >
-              Yes, delete everything
+              {t('settings.deleteYes')}
             </button>
             <button type="button" className={styles.button} onClick={() => setConfirmReset(false)}>
-              Keep it
+              {t('settings.keep')}
             </button>
           </>
         )}

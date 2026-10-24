@@ -55,7 +55,7 @@ export function B2View({
         canAnswer={canAnswer}
         accidentalPref={prompt.accidentalPref}
         onTap={onTap}
-        label="Fretboard: play or tap the chord's root"
+        label={t('neck.b2')}
       />
     </div>
   );

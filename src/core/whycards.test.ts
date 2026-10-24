@@ -12,7 +12,7 @@ describe('why cards and helpers', () => {
     expect(capoHelper('Bb', 'G')).toMatchObject({ fret: 3 });
     expect(capoHelper('E', 'D').fret).toBe(2);
     expect(capoHelper('G', 'G').fret).toBe(0);
-    expect(capoHelper('Bb', 'G').text).toContain('Capo on fret 3');
+    expect(capoHelper('Bb', 'G')).toEqual({ fret: 3, sounding: 'Bb major', shapes: 'G major' });
   });
 
   it('names the circle neighbours and the relative key', () => {

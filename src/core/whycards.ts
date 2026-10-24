@@ -1,7 +1,8 @@
 /**
  * "Why it works" cards (PRD A4): one short paragraph each, read after the
  * sound has been heard (research finding 11: hear first, label second), and
- * the capo helper (PRD A4, topic C10).
+ * the capo helper (PRD A4, topic C10). The cards' text lives in `i18n.ts`
+ * under `why.<id>.title` and `why.<id>.body`; this module keeps what to play.
  */
 import {
   capoFret,
@@ -13,66 +14,34 @@ import {
 
 export interface WhyCard {
   id: string;
-  title: string;
-  body: string;
   /** The numerals the Keys screen strums before showing the card. */
   hear: readonly string[];
 }
 
 export const WHY_CARDS: readonly WhyCard[] = [
-  {
-    id: 'v-pulls-home',
-    title: 'Why V pulls home',
-    hear: ['V', 'I'],
-    body: 'The V chord holds the 7th degree of the key, one half step under the tonic, and (as V7) the 4th, one half step over the 3rd. Both lean on their neighbours, so the chord sounds unfinished until the I resolves it.',
-  },
-  {
-    id: 'iv-lifts',
-    title: 'Why IV lifts away',
-    hear: ['I', 'IV'],
-    body: 'IV shares the tonic with I but swaps the 3rd and 5th for the 4th and 6th: the ground stays, the roof moves up. It feels like stepping away from home without leaving the key.',
-  },
-  {
-    id: 'vi-darkens',
-    title: 'Why vi sounds sad',
-    hear: ['I', 'vi'],
-    body: 'vi shares two notes with I (the tonic and the 3rd) and replaces the 5th with the 6th. Same colour, minor shape: the relative minor. That is why I–vi–IV–V and vi–IV–I–V are the same four chords with a different mood.',
-  },
-  {
-    id: 'ii-v-i',
-    title: 'Why ii–V–I is the jazz cadence',
-    hear: ['ii', 'V', 'I'],
-    body: 'Roots falling by fifths (2 → 5 → 1) is the strongest motion in the key, and ii shares three notes with IV, so ii–V–I is IV–V–I with a minor colour in front of the pull home.',
-  },
-  {
-    id: 'twelve-bar',
-    title: 'Why the 12-bar blues uses dominant sevenths everywhere',
-    hear: ['I7', 'IV7', 'V7', 'I7'],
-    body: 'In the blues every chord is a dominant seventh, so every chord pulls somewhere and none of them is quite at rest. The ♭7 on the I chord is the blue note that major harmony does not have.',
-  },
-  {
-    id: 'minor-vii',
-    title: 'Why minor keys lean on ♭VII and ♭VI',
-    hear: ['i', 'bVII', 'bVI', 'bVII'],
-    body: 'Natural minor has no leading tone, so its V is minor and weak. ♭VII and ♭VI are the major chords a whole step and a half step under the tonic; rock minor vamps live on them because they move without pulling.',
-  },
+  { id: 'v-pulls-home', hear: ['V', 'I'] },
+  { id: 'iv-lifts', hear: ['I', 'IV'] },
+  { id: 'vi-darkens', hear: ['I', 'vi'] },
+  { id: 'ii-v-i', hear: ['ii', 'V', 'I'] },
+  { id: 'twelve-bar', hear: ['I7', 'IV7', 'V7', 'I7'] },
+  { id: 'minor-vii', hear: ['i', 'bVII', 'bVI', 'bVII'] },
 ];
 
 export interface CapoAnswer {
+  /** 0 when the two keys are the same. */
   fret: number;
-  text: string;
+  /** The key the song sounds in, named. */
+  sounding: string;
+  /** The key whose open shapes are played, named. */
+  shapes: string;
 }
 
-/** A song in `sounding` played with the open shapes of `shapes`: which fret? */
+/** A song in `sounding` played with the open shapes of `shapes`: which fret? The screen words it. */
 export function capoHelper(sounding: string, shapes: string): CapoAnswer {
-  const fret = capoFret(parseKey(sounding), parseKey(shapes));
-  const s = keyName(parseKey(sounding));
-  const sh = keyName(parseKey(shapes));
-  if (fret === 0)
-    return { fret, text: `${s} with ${sh} shapes needs no capo: they are the same key.` };
   return {
-    fret,
-    text: `Capo on fret ${fret}: ${sh} shapes sound in ${s}. Each fret of capo raises the shapes one half step.`,
+    fret: capoFret(parseKey(sounding), parseKey(shapes)),
+    sounding: keyName(parseKey(sounding)),
+    shapes: keyName(parseKey(shapes)),
   };
 }
 

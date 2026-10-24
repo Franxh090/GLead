@@ -85,6 +85,11 @@ export function chordToneHitRate(trials: readonly TrialEvent[], drillId = 'c1-ch
   return tallyAll(trials.filter((t) => t.drillId === drillId));
 }
 
+/** Share of call-and-response takes that stayed in key (PRD C4), over response trials. */
+export function responseInKeyRate(trials: readonly TrialEvent[], drillId = 'c4-response'): Tally {
+  return tallyAll(trials.filter((t) => t.drillId === drillId));
+}
+
 /** The placement baseline per skill, from the placement session's trials. */
 export function placementBaseline(trials: readonly TrialEvent[]): Record<string, Tally> {
   return tallyBy(
@@ -158,25 +163,29 @@ export function skillReport(
 // --- Experiments (PRD §6) ---------------------------------------------------
 
 export interface ArmComparison {
+  /** Stable id for the screen's translations: `imagine`, `feedback`, `schedule`, `labels`. */
+  id: string;
   question: string;
-  arms: { label: string; tally: Tally }[];
+  arms: { id: string; label: string; tally: Tally }[];
 }
 
 /** Accuracy by arm for each built-in experiment, from the trial log. */
 export function experimentReport(trials: readonly TrialEvent[]): ArmComparison[] {
   const practice = practiceOnly(trials).filter(
-    (t) => t.retest === 'none' && t.drillId !== 'c1-changes',
+    (t) => t.retest === 'none' && t.drillId !== 'c1-changes' && t.drillId !== 'c4-response',
   );
   const by = <K extends string>(
     keyOf: (t: TrialEvent) => K,
     labels: Record<K, string>,
-  ): { label: string; tally: Tally }[] =>
+  ): { id: string; label: string; tally: Tally }[] =>
     (Object.entries(labels) as [K, string][]).map(([k, label]) => ({
+      id: k,
       label,
       tally: tallyAll(practice.filter((t) => keyOf(t) === k)),
     }));
   return [
     {
+      id: 'imagine',
       question: 'Does a silent beat to imagine the note first help?',
       arms: by((t) => (t.imagineFirst ? 'on' : 'off'), {
         on: 'Imagine first',
@@ -184,10 +193,12 @@ export function experimentReport(trials: readonly TrialEvent[]): ArmComparison[]
       }),
     },
     {
+      id: 'feedback',
       question: 'Does less feedback after a right answer hurt or help?',
       arms: by((t) => t.feedbackVariant, { full: 'Full feedback', faded: 'Faded feedback' }),
     },
     {
+      id: 'schedule',
       question: 'Interleaved or blocked weeks?',
       arms: by((t) => t.schedule ?? 'interleaved', {
         interleaved: 'Interleaved',
@@ -195,6 +206,7 @@ export function experimentReport(trials: readonly TrialEvent[]): ArmComparison[]
       }),
     },
     {
+      id: 'labels',
       question: 'Numbers or moveable-do?',
       arms: by((t) => (t.experimentArm.includes('labels=moveable-do') ? 'do' : 'num'), {
         num: 'Numbers',

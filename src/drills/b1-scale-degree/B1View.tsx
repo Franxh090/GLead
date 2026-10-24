@@ -56,7 +56,7 @@ export function B1View({
         canAnswer={canAnswer}
         accidentalPref={prompt.accidentalPref}
         onTap={onTap}
-        label="Fretboard: tap the note you heard"
+        label={t('neck.b1')}
       />
     </div>
   );

@@ -227,20 +227,38 @@ export interface SessionShape {
  * plan's reviews come first; new items follow; a session of ten minutes or
  * more ends on a short take over a loop.
  */
+/** The words the goal sentence is built from; the screen passes translated ones. */
+export interface ShapePhrases {
+  reviews(n: number): string;
+  concepts(titles: readonly string[]): string;
+  playAlong(minutes: number): string;
+  short: string;
+  separator: string;
+}
+
+export const ENGLISH_PHRASES: ShapePhrases = {
+  reviews: (n) => `${n} review${n === 1 ? '' : 's'} to warm up`,
+  concepts: (titles) => `new: ${titles.join(' and ')}`,
+  playAlong: (m) => `then ${m} minutes over a loop`,
+  short: 'A short pass over what you know.',
+  separator: ', ',
+};
+
 export function sessionShape(
   plan: readonly PlanEntry[],
   minutes: number,
   titleOf: (skillId: string) => string,
+  phrases: ShapePhrases = ENGLISH_PHRASES,
 ): SessionShape {
   const reviews = plan.filter((e) => e.kind === 'review').length;
   const concepts = [...new Set(plan.filter((e) => e.kind === 'new').map((e) => e.item.skillId))];
   const playAlong = minutes >= 10 ? { minutes: minutes >= 20 ? 4 : 2 } : null;
   const parts: string[] = [];
-  if (reviews > 0) parts.push(`${reviews} review${reviews === 1 ? '' : 's'} to warm up`);
-  if (concepts.length > 0) parts.push(`new: ${concepts.map(titleOf).join(' and ')}`);
-  if (playAlong) parts.push(`then ${playAlong.minutes} minutes over a loop`);
+  if (reviews > 0) parts.push(phrases.reviews(reviews));
+  if (concepts.length > 0) parts.push(phrases.concepts(concepts.map(titleOf)));
+  if (playAlong) parts.push(phrases.playAlong(playAlong.minutes));
   return {
-    goal: parts.length ? parts.join(', ') + '.' : 'A short pass over what you know.',
+    goal: parts.length ? parts.join(phrases.separator) + '.' : phrases.short,
     warmUp: reviews,
     concepts,
     playAlong,

@@ -11,12 +11,13 @@ import {
   percent,
   placementBaseline,
   practiceOnly,
+  responseInKeyRate,
   skillReport,
   tallyAll,
   tallyBy,
   transfer,
 } from '../core/metrics';
-import { SKILLS, skillById } from '../drills/registry';
+import { SKILLS, skillById, skillTitle } from '../drills/registry';
 import type { TrialEvent } from '../core/types';
 import { parseB1Item } from '../drills/b1-scale-degree/logic';
 import styles from '../styles/app.module.css';
@@ -56,8 +57,11 @@ export function ProgressScreen() {
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     try {
-      const { trials: t, exportedAt } = parseExport(await file.text());
-      setLoaded({ trials: t, label: `${file.name} (exported ${exportedAt})` });
+      const { trials: tr, exportedAt } = parseExport(await file.text());
+      setLoaded({
+        trials: tr,
+        label: t('progress.exported', { name: file.name, date: exportedAt }),
+      });
       setLoadError(null);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err));
@@ -65,13 +69,14 @@ export function ProgressScreen() {
   };
 
   const trials = loaded ? loaded.trials : own;
-  if (!trials) return <p className={styles.muted}>Loading…</p>;
+  if (!trials) return <p className={styles.muted}>{t('progress.loading')}</p>;
 
   const practice = practiceOnly(trials);
   const all = tallyAll(practice);
   const d = delayed(trials);
   const tr = transfer(trials);
   const hits = chordToneHitRate(trials);
+  const responses = responseInKeyRate(trials);
   const baseline = placementBaseline(trials);
   const reports = SKILLS.filter((sk) => trials.some((t) => t.skillId === sk.id)).map((sk) =>
     skillReport(trials, sk.id),
@@ -89,9 +94,10 @@ export function ProgressScreen() {
       <h2>{t('progress.title')}</h2>
       {loaded && (
         <div className={styles.status} role="status">
-          Viewing <strong>{loaded.label}</strong>, read-only. Nothing from it is saved here.{' '}
+          {t('progress.viewing')} <strong>{loaded.label}</strong>
+          {t('progress.readOnly')}{' '}
           <button type="button" className={styles.button} onClick={() => setLoaded(null)}>
-            Back to my data
+            {t('progress.backMine')}
           </button>
         </div>
       )}
@@ -100,56 +106,59 @@ export function ProgressScreen() {
         <table className={styles.table}>
           <tbody>
             <tr>
-              <th>Retest after 1 day</th>
+              <th>{t('progress.retest1')}</th>
               <td>{percent(accuracyOf(d['1d']))}</td>
-              <td className={styles.muted}>{d['1d'].trials} trials</td>
+              <td className={styles.muted}>{t('progress.nTrials', { n: d['1d'].trials })}</td>
             </tr>
             <tr>
-              <th>Retest after 7 days</th>
+              <th>{t('progress.retest7')}</th>
               <td>{percent(accuracyOf(d['7d']))}</td>
-              <td className={styles.muted}>{d['7d'].trials} trials</td>
+              <td className={styles.muted}>{t('progress.nTrials', { n: d['7d'].trials })}</td>
             </tr>
             <tr>
-              <th>Retest after 30 days</th>
+              <th>{t('progress.retest30')}</th>
               <td>{percent(accuracyOf(d['30d']))}</td>
-              <td className={styles.muted}>{d['30d'].trials} trials</td>
+              <td className={styles.muted}>{t('progress.nTrials', { n: d['30d'].trials })}</td>
             </tr>
             <tr>
-              <th>Unseen keys (transfer)</th>
+              <th>{t('progress.transfer')}</th>
               <td>{percent(accuracyOf(tr))}</td>
-              <td className={styles.muted}>{tr.trials} trials</td>
+              <td className={styles.muted}>{t('progress.nTrials', { n: tr.trials })}</td>
             </tr>
             <tr>
-              <th>Chord-tone hit rate (Changes)</th>
+              <th>{t('progress.hits')}</th>
               <td>{percent(accuracyOf(hits))}</td>
-              <td className={styles.muted}>{hits.trials} changes</td>
+              <td className={styles.muted}>{t('progress.nChanges', { n: hits.trials })}</td>
+            </tr>
+            <tr>
+              <th>{t('progress.responses')}</th>
+              <td>{percent(accuracyOf(responses))}</td>
+              <td className={styles.muted}>{t('progress.nTakes', { n: responses.trials })}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p className={styles.muted}>
-        Retests are scheduled when a skill first reaches 90% over 20 trials; they appear on Today
-        when due.
-      </p>
+      <p className={styles.muted}>{t('progress.retestNote')}</p>
       {Object.keys(baseline).length > 0 && (
         <>
-          <h3>Placement baseline</h3>
+          <h3>{t('progress.baseline')}</h3>
           <div className={styles.scroll}>
             <table className={styles.table}>
               <tbody>
-                {Object.entries(baseline).map(([k, t]) => (
+                {Object.entries(baseline).map(([k, tally]) => (
                   <tr key={k}>
                     <th>
                       {(() => {
                         try {
-                          return skillById(k).title;
+                          skillById(k);
+                          return skillTitle(k);
                         } catch {
                           return k;
                         }
                       })()}
                     </th>
-                    <td>{percent(accuracyOf(t))}</td>
-                    <td className={styles.muted}>{t.trials} trials</td>
+                    <td>{percent(accuracyOf(tally))}</td>
+                    <td className={styles.muted}>{t('progress.nTrials', { n: tally.trials })}</td>
                   </tr>
                 ))}
               </tbody>
@@ -159,31 +168,28 @@ export function ProgressScreen() {
       )}
       {reports.length > 0 && (
         <>
-          <h3>By skill</h3>
-          <p className={styles.muted}>
-            Trials to criterion is the trial at which a skill first hit 90% over 20; the learning
-            rate is accuracy gained per 100 trials. Both are n-of-1 numbers.
-          </p>
+          <h3>{t('progress.bySkill')}</h3>
+          <p className={styles.muted}>{t('progress.bySkillNote')}</p>
           <div className={styles.neck}>
-            <table className={styles.table} aria-label="Skills">
+            <table className={styles.table} aria-label={t('progress.skillsAria')}>
               <thead>
                 <tr>
-                  <th>Skill</th>
-                  <th>Baseline</th>
-                  <th>Trials</th>
-                  <th>Recent</th>
-                  <th>To criterion</th>
-                  <th>Rate</th>
+                  <th>{t('progress.colSkill')}</th>
+                  <th>{t('progress.colBaseline')}</th>
+                  <th>{t('progress.colTrials')}</th>
+                  <th>{t('progress.colRecent')}</th>
+                  <th>{t('progress.colCriterion')}</th>
+                  <th>{t('progress.colRate')}</th>
                   <th>1d</th>
                   <th>7d</th>
                   <th>30d</th>
-                  <th>Transfer</th>
+                  <th>{t('progress.colTransfer')}</th>
                 </tr>
               </thead>
               <tbody>
                 {reports.map((r) => (
                   <tr key={r.skillId}>
-                    <td>{skillById(r.skillId).title}</td>
+                    <td>{skillTitle(r.skillId)}</td>
                     <td>{percent(accuracyOf(r.baseline))}</td>
                     <td>{r.practice.trials}</td>
                     <td>{percent(r.recent)}</td>
@@ -204,20 +210,17 @@ export function ProgressScreen() {
           </div>
         </>
       )}
-      <h3>Experiments</h3>
-      <p className={styles.muted}>
-        Each trial was dealt its conditions at random, so these compare like with like. One learner
-        is not a study: treat a gap as a hint, not a finding.
-      </p>
+      <h3>{t('progress.experiments')}</h3>
+      <p className={styles.muted}>{t('progress.experimentsNote')}</p>
       <div className={styles.scroll}>
-        <table className={styles.table} aria-label="Experiments">
+        <table className={styles.table} aria-label={t('progress.experiments')}>
           <tbody>
             {experiments.map((e) => (
-              <tr key={e.question}>
-                <th>{e.question}</th>
+              <tr key={e.id}>
+                <th>{t(`exp.${e.id}`)}</th>
                 {e.arms.map((a) => (
-                  <td key={a.label}>
-                    {a.label}: {percent(accuracyOf(a.tally))}{' '}
+                  <td key={a.id}>
+                    {t(`exp.${e.id}.${a.id}`)}: {percent(accuracyOf(a.tally))}{' '}
                     <span className={styles.muted}>({a.tally.trials})</span>
                   </td>
                 ))}
@@ -226,15 +229,12 @@ export function ProgressScreen() {
           </tbody>
         </table>
       </div>
-      <h3>In session</h3>
+      <h3>{t('progress.inSession')}</h3>
       <p>
         <span className={styles.big}>{percent(accuracyOf(all))}</span>{' '}
-        <span className={styles.muted}>over {all.trials} trials</span>
+        <span className={styles.muted}>{t('progress.over', { n: all.trials })}</span>
         {confirm !== null && (
-          <span className={styles.muted}>
-            {' '}
-            · {percent(confirm)} of mic answers needed confirming
-          </span>
+          <span className={styles.muted}> {t('progress.confirm', { pct: percent(confirm) })}</span>
         )}
       </p>
       {Object.keys(byDegree).length > 0 && (
@@ -242,19 +242,19 @@ export function ProgressScreen() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Degree</th>
-                <th>Accuracy</th>
-                <th>Trials</th>
+                <th>{t('progress.colDegree')}</th>
+                <th>{t('progress.colAccuracy')}</th>
+                <th>{t('progress.colTrials')}</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(byDegree)
                 .sort()
-                .map(([k, t]) => (
+                .map(([k, tally]) => (
                   <tr key={k}>
                     <td>{k}</td>
-                    <td>{percent(accuracyOf(t))}</td>
-                    <td>{t.trials}</td>
+                    <td>{percent(accuracyOf(tally))}</td>
+                    <td>{tally.trials}</td>
                   </tr>
                 ))}
             </tbody>
@@ -266,17 +266,17 @@ export function ProgressScreen() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Key</th>
-                <th>Accuracy</th>
-                <th>Trials</th>
+                <th>{t('progress.colKey')}</th>
+                <th>{t('progress.colAccuracy')}</th>
+                <th>{t('progress.colTrials')}</th>
               </tr>
             </thead>
             <tbody>
-              {Object.entries(byKey).map(([k, t]) => (
+              {Object.entries(byKey).map(([k, tally]) => (
                 <tr key={k}>
                   <td>{k}</td>
-                  <td>{percent(accuracyOf(t))}</td>
-                  <td>{t.trials}</td>
+                  <td>{percent(accuracyOf(tally))}</td>
+                  <td>{tally.trials}</td>
                 </tr>
               ))}
             </tbody>
