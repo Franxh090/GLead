@@ -1,6 +1,7 @@
 import type { GLeadDB, Settings } from './db';
 import { DEFAULT_SETTINGS, TABLE_NAMES } from './db';
 import type { CardRecord, RetestRecord, SessionRecord, TrialEvent } from '../types';
+import type { MicLabRun } from '../miclab';
 
 export interface Repo {
   getSettings(): Promise<Settings>;
@@ -14,6 +15,8 @@ export interface Repo {
   retests(): Promise<RetestRecord[]>;
   saveRetest(retest: RetestRecord): Promise<void>;
   saveCards(cards: readonly CardRecord[]): Promise<void>;
+  saveMicLabRun(run: MicLabRun): Promise<void>;
+  micLabRuns(): Promise<MicLabRun[]>;
   /** Everything, as one JSON-able object (PRD D6 export). */
   exportAll(): Promise<Record<string, unknown[]>>;
   clearAll(): Promise<void>;
@@ -51,6 +54,10 @@ export function createRepo(db: GLeadDB): Repo {
     async saveCards(cards) {
       await db.cards.bulkPut([...cards]);
     },
+    async saveMicLabRun(run) {
+      await db.miclab.add(run);
+    },
+    micLabRuns: () => db.miclab.orderBy('at').toArray(),
     async exportAll() {
       const out: Record<string, unknown[]> = {};
       for (const name of TABLE_NAMES) out[name] = await db.table(name).toArray();

@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { ChangesScreen } from './screens/ChangesScreen';
 import { KeysScreen } from './screens/KeysScreen';
 import { LoopsScreen } from './screens/LoopsScreen';
+import { MicLabScreen } from './screens/MicLabScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { SessionScreen, type PlayAlongPreset, type SessionOptions } from './screens/SessionScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import styles from './styles/app.module.css';
 
-type Screen = 'today' | 'session' | 'keys' | 'changes' | 'loops' | 'progress' | 'settings';
+type Screen =
+  'today' | 'session' | 'keys' | 'changes' | 'loops' | 'progress' | 'settings' | 'miclab';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('today');
@@ -58,7 +60,8 @@ export function App() {
         {screen === 'changes' && <ChangesScreen preset={preset} />}
         {screen === 'loops' && <LoopsScreen />}
         {screen === 'progress' && <ProgressScreen />}
-        {screen === 'settings' && <SettingsScreen />}
+        {screen === 'settings' && <SettingsScreen onMicLab={() => setScreen('miclab')} />}
+        {screen === 'miclab' && <MicLabScreen onExit={() => setScreen('settings')} />}
       </main>
     </div>
   );

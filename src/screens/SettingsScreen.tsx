@@ -30,7 +30,7 @@ function Toggle({
   );
 }
 
-export function SettingsScreen() {
+export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
   const app = useApp();
   const s = useSettings(app.settings);
   const [micCheck, setMicCheck] = useState<string>('');
@@ -67,6 +67,11 @@ export function SettingsScreen() {
           <button type="button" className={styles.button} onClick={() => void testMic()}>
             Test the microphone
           </button>
+          {onMicLab && (
+            <button type="button" className={styles.button} onClick={onMicLab}>
+              Run the Mic lab (five minutes)
+            </button>
+          )}
           {micCheck && <span className={styles.muted}>{micCheck}</span>}
         </div>
       )}
@@ -142,6 +147,21 @@ export function SettingsScreen() {
         value={s.soundOn}
         onChange={(v) => void app.settings.update({ soundOn: v })}
       />
+      <div className={styles.field}>
+        <span>Weekly goal: {s.weeklyGoal === 0 ? 'off' : `${s.weeklyGoal} sessions`}</span>
+        <input
+          type="range"
+          min={0}
+          max={7}
+          step={1}
+          value={s.weeklyGoal}
+          aria-label="Weekly goal in sessions"
+          onChange={(e) => void app.settings.update({ weeklyGoal: Number(e.target.value) })}
+        />
+      </div>
+      <p className={styles.muted}>
+        A goal counts sessions; it never changes what the schedule asks you to practise.
+      </p>
       <h3>Your experiment arms</h3>
       <p className={styles.muted}>
         Drawn once at first run (PRD §6):{' '}

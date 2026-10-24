@@ -18,6 +18,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
   const [placed, setPlaced] = useState<boolean | null>(null);
   const [retests, setRetests] = useState<RetestRecord[]>([]);
   const [lastReflection, setLastReflection] = useState<string>('');
+  const [thisWeek, setThisWeek] = useState(0);
 
   useEffect(() => {
     void (async () => {
@@ -28,6 +29,14 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
       const sessions = await app.repo.sessions();
       setPlaced(sessions.some((x) => x.kind === 'placement'));
       setLastReflection([...sessions].reverse().find((x) => x.reflection.trim())?.reflection ?? '');
+      const monday = new Date();
+      monday.setHours(0, 0, 0, 0);
+      monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+      setThisWeek(
+        sessions.filter(
+          (x) => (x.kind ?? 'practice') === 'practice' && x.trials > 0 && x.startedAt >= monday,
+        ).length,
+      );
       setRetests(await app.repo.retests());
     })();
   }, [app]);
@@ -86,6 +95,11 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
           </button>
         </div>
       ))}
+      {settings.weeklyGoal > 0 && (
+        <p className={styles.muted} role="status">
+          This week: {thisWeek} of {settings.weeklyGoal} sessions.
+        </p>
+      )}
       {lastReflection && (
         <p className={styles.muted}>
           Last time you wrote: <q>{lastReflection}</q>

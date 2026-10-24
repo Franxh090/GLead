@@ -25,10 +25,10 @@ product definition is `docs/prd-concise.md`; the evidence behind it is
 ## Layout (`src/`)
 
 - `vendor/fretfree/`: theory (tonal), mic (pitchy in an AudioWorklet), audio (Tone.js guitar, strums, progressions), fretboard SVG, FSRS grading/scheduler/adaptive band.
-- `core/`: GLead's own engine. `types.ts` (InputAdapter, Drill, Scorer, BackingLoop, TrialEvent), `input/` (tap, mic adapters), `events/` (Dexie log + export), `scheduling/` (session plan, placement, retests), `scoring/` (play-along change scorer), `session/` (runner; a session's `purpose` is practice, placement or retest; a drill that `accumulate`s collects a sequence of notes), `experiments.ts` (arms dealt once, conditions drawn per trial, the weekly schedule), `keymap.ts` (the Keys screen's pure helpers), `metrics.ts` (every dashboard number).
+- `core/`: GLead's own engine. `types.ts` (InputAdapter, Drill, Scorer, BackingLoop, TrialEvent), `input/` (tap, mic adapters), `events/` (Dexie log + export), `scheduling/` (session plan, placement, retests), `scoring/` (play-along change scorer), `session/` (runner; a session's `purpose` is practice, placement or retest; a drill that `accumulate`s collects a sequence of notes), `experiments.ts` (arms dealt once, conditions drawn per trial, the weekly schedule), `keymap.ts` and `whycards.ts` (the Keys screen's pure helpers), `miclab.ts` (the R2 protocol and its summary), `metrics.ts` (every dashboard number).
 - `audio/`: cadences and backing loops built on the vendored audio engine.
 - `drills/`: one folder per drill, `logic.ts` pure and tested, view in `.tsx`.
-- `screens/`: Today, Session, Keys (A1/A2 reference), Changes (play-along), Loops, Progress (also views another learner's export read-only), Settings.
+- `screens/`: Today, Session, Keys (A1/A2 reference), Changes (play-along), Loops, Progress (also views another learner's export read-only), Settings, Mic lab (from Settings).
 
 ## Conventions
 

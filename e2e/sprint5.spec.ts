@@ -21,7 +21,7 @@ test.describe('Keys (A1, A2)', () => {
       3,
     );
     await page.locator('[data-cell="s5f0"]').first().dispatchEvent('pointerdown');
-    await expect(page.getByRole('status')).toContainText(/A2: degree 5/);
+    await expect(page.getByRole('status').filter({ hasText: /A2: degree 5/ })).toBeVisible();
     await page.getByRole('button', { name: 'Back to the scale' }).click();
     await expect(page.getByRole('heading', { name: /Three places/ })).toHaveCount(0);
   });

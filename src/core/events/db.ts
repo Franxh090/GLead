@@ -6,6 +6,7 @@ import Dexie, { type EntityTable } from 'dexie';
 import type { GuideLevel, Handedness } from '../../vendor/fretfree/engine/model';
 import type { AccidentalPref } from '../../vendor/fretfree/theory';
 import type { CardRecord, LabelScheme, RetestRecord, SessionRecord, TrialEvent } from '../types';
+import type { MicLabRun } from '../miclab';
 
 export interface Settings {
   key: 'singleton';
@@ -14,6 +15,8 @@ export interface Settings {
   labelScheme: LabelScheme;
   /** Mic answers below this confidence ask the learner to confirm by tap. Provisional until R2. */
   confirmBelow: number;
+  /** Sessions per week the learner aims for; 0 is off. Never changes what is scheduled (PRD D7). */
+  weeklyGoal: number;
   /** A silent beat between hearing and playing (PRD B6). */
   imagineFirst: boolean;
   imagineMs: number;
@@ -31,6 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accidentalPref: 'sharp',
   labelScheme: 'numbers',
   confirmBelow: 0.6,
+  weeklyGoal: 0,
   imagineFirst: false,
   imagineMs: 1200,
   guideLevel: 3,
@@ -60,6 +64,13 @@ export const SCHEMA_VERSIONS: readonly { version: number; stores: Record<string,
       retests: '++id, skillId, dueAt, doneAt',
     },
   },
+  {
+    // Sprint 6 (research R2): Mic lab runs.
+    version: 3,
+    stores: {
+      miclab: '++id, at',
+    },
+  },
 ];
 
 export class GLeadDB extends Dexie {
@@ -68,6 +79,7 @@ export class GLeadDB extends Dexie {
   trials!: EntityTable<TrialEvent, 'id'>;
   sessions!: EntityTable<SessionRecord, 'id'>;
   retests!: EntityTable<RetestRecord, 'id'>;
+  miclab!: EntityTable<MicLabRun, 'id'>;
 
   constructor(name: string = DB_NAME) {
     super(name);
@@ -75,7 +87,14 @@ export class GLeadDB extends Dexie {
   }
 }
 
-export const TABLE_NAMES = ['settings', 'cards', 'trials', 'sessions', 'retests'] as const;
+export const TABLE_NAMES = [
+  'settings',
+  'cards',
+  'trials',
+  'sessions',
+  'retests',
+  'miclab',
+] as const;
 
 let instance: GLeadDB | null = null;
 

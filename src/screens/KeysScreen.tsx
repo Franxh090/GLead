@@ -27,6 +27,8 @@ import {
 } from '../core/keymap';
 import { degreeLabel } from '../core/keys';
 import { useSettings } from '../core/settings-store';
+import { WHY_CARDS, capoHelper, keyNeighbours } from '../core/whycards';
+import { chordFromNumeral } from '../vendor/fretfree/theory';
 import styles from '../styles/app.module.css';
 
 const MAJOR_KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
@@ -45,6 +47,8 @@ export function KeysScreen() {
   const [sevenths, setSevenths] = useState(false);
   const [chordIndex, setChordIndex] = useState<number | null>(null);
   const [heard, setHeard] = useState<string | null>(null);
+  const [shapesKey, setShapesKey] = useState('G');
+  const [openCard, setOpenCard] = useState<string | null>(null);
 
   const key = useMemo(() => parseKey(tonic[mode]), [tonic, mode]);
   const chords = useMemo(() => diatonicChords(key, { sevenths }), [key, sevenths]);
@@ -233,6 +237,75 @@ export function KeysScreen() {
           )}
         </section>
       )}
+      <section aria-label="Around the circle">
+        <h3>Around the circle</h3>
+        <p className={styles.muted}>
+          {(() => {
+            const n = keyNeighbours(key);
+            return `${keyName(key)}: its IV side is ${n.subdominant}, its V side is ${n.dominant}, its relative key is ${n.relative}. Neighbours share six of seven notes, which is why songs modulate to them.`;
+          })()}
+        </p>
+      </section>
+      <section aria-label="Capo helper">
+        <h3>Capo helper</h3>
+        <div className={styles.field}>
+          <span>A song in {keyName(key)} with the open shapes of</span>
+          <select
+            aria-label="Shapes key"
+            value={shapesKey}
+            onChange={(e) => setShapesKey(e.target.value)}
+            className={styles.button}
+          >
+            {['C', 'G', 'D', 'A', 'E'].map((k) => (
+              <option key={k} value={k}>
+                {k}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p role="status">
+          {mode === 'major'
+            ? capoHelper(tonic.major, shapesKey).text
+            : capoHelper(keyNeighbours(key).relative, shapesKey).text + ' (via the relative major)'}
+        </p>
+      </section>
+      <section aria-label="Why it works">
+        <h3>Why it works</h3>
+        <p className={styles.muted}>Hear it first; the card opens after the sound.</p>
+        <div className={styles.row}>
+          {WHY_CARDS.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`${styles.button} ${openCard === c.id ? styles.primary : ''}`}
+              onClick={() => {
+                const k =
+                  c.hear[0]?.startsWith('i') || c.hear[0]?.startsWith('b')
+                    ? parseKey(mode === 'minor' ? tonic.minor : keyNeighbours(key).relative)
+                    : parseKey(mode === 'major' ? tonic.major : keyNeighbours(key).relative);
+                void playScript([
+                  {
+                    type: 'progression',
+                    chords: c.hear.map((n) =>
+                      voiceChord(chordFromNumeral(k, n), settings.accidentalPref),
+                    ),
+                    bpm: 100,
+                    beatsPerChord: 2,
+                  },
+                ]);
+                setOpenCard(c.id);
+              }}
+            >
+              {c.title}
+            </button>
+          ))}
+        </div>
+        {openCard && (
+          <p className={styles.status} role="note">
+            {WHY_CARDS.find((c) => c.id === openCard)?.body}
+          </p>
+        )}
+      </section>
     </div>
   );
 }
