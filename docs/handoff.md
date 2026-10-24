@@ -1,16 +1,16 @@
 # GLead handoff
 
-**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprint 8. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 8 is on `main` at `github.com/Franxh090/GLead`; nothing is uncommitted.
+**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprints 8 and 9. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 8 is on `main` at `github.com/Franxh090/GLead`; Sprint 9 is on the branch `claude/wizardly-fermi-6t4qbo`, ready to merge.
 
 ## 1. Where things stand
 
-- **Built:** every PRD P0 item and the P1 list except chord detection. Six drills (B1–B5, B8) plus C4 call and response after each melody, Changes (play-along scoring), Keys (A1, A2, A4, Find my key), Loops, placement, retests, experiment arms, dashboard, Mic lab, Spanish on every screen, eight tunings. `README.md` §Status lists it all.
-- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 698 unit tests, build) is green. `pnpm e2e` runs 34 Playwright specs (31 desktop, 3 at iPhone 15 width) in about two minutes; all pass.
+- **Built:** every PRD P0 item and the P1 list except chord detection, plus curriculum level 4. Seven drills (B1–B5, B8, B9 progressions by ear) plus C4 call and response after each melody, Changes (play-along scoring with approach and passing-note measures), Keys (A1, A2, A4, Find my key), Loops, placement, retests, experiment arms, dashboard with a cohort view for the pilot, Mic lab, Spanish on every screen, eight tunings. `README.md` §Status lists it all.
+- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 708 unit tests, build) is green. `pnpm e2e` runs 37 Playwright specs (34 desktop, 3 at iPhone 15 width) in about two and a half minutes; all pass.
 - **Deployment:** `.github/workflows/pages.yml` builds `main` and publishes `dist` to GitHub Pages with base path `/GLead/`. Pages is enabled (Frank, 24 Oct) and **run 5 deployed**: the site is live at `https://franxh090.github.io/GLead/`.
 
 ## 2. The next things Frank must do
 
-On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
+Merge Sprint 9 into `main` (the deploy follows by itself). On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
 
 If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnpm build` and output `dist`, with no base path at a root domain (`GLEAD_BASE` unset).
 
@@ -54,5 +54,5 @@ See `CLAUDE.md` §Layout. The pure cores to read first: `src/core/session/runner
 
 1. Do the Mic lab on the iPhone (Frank). Fix whatever iOS Safari shows; nothing has run on a real device yet. The C4 response panel and the new tunings have only run in Chromium.
 2. Interleaved-vs-blocked results will take weeks; nothing to build there yet.
-3. After the pilot: fixes from exports and interviews, then levels 4–6 of the curriculum (ii–V–I and 7ths are partly there in B2/B3; passing notes and phrase building are not). C4's in-key share on Progress is the first number for phrase building.
+3. After the pilot: fixes from exports and interviews (the cohort view on Progress reads several exports at once), then levels 5–6 of the curriculum: phrase building as a graded drill (C4's in-key share and the Changes approach measures are its first numbers) and learning a song by ear. Level 4 (ii–V–I and 7ths in B2/B3, progressions in B9, passing notes measured on Changes) is covered.
 4. Chord detection (P1) is the one PRD item left; it needs a polyphonic detector, which pitchy is not.

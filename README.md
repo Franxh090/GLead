@@ -21,22 +21,24 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprints 0–8 of the plan in `docs/implementation-plan.md` are built, apart from
+Sprints 0–9 of the plan in `docs/implementation-plan.md` are built, apart from
 the parts only people can do: the four-week pilot, the teacher interviews and
 the device measurement (R2), for which the app carries its own Mic lab. What
 works today:
 
-- **Six ear drills**: B1 scale degree, B2 chord function, B3 note against
+- **Seven ear drills**: B1 scale degree, B2 chord function, B3 note against
   chord, B4 melodies by ear and B5 spot the error, each answered on the guitar
-  through the microphone or by tapping; and B8 intervals by ear with song
-  hints. Feedback on the neck, a confirm prompt when the detector is unsure,
+  through the microphone or by tapping; B8 intervals by ear with song hints;
+  and B9 progressions by ear, three or four chords named by numeral in order
+  or by playing their roots. Feedback on the neck, a confirm prompt when the detector is unsure,
   misses that come back, FSRS scheduling per item. After a copied melody, **call
   and response** (C4): answer with a phrase of your own, see which notes stayed
   in key and whether you left the pentatonic box, logged as a take and never
   graded.
 - **Sessions with a shape**: the goal up front, reviews first, then new
   material, then a scored play-along over a loop (**Changes**) whose targets
-  hide once two takes land 80%.
+  hide once two takes land 80%; every landing records how it was reached and
+  the passing notes before the next change.
 - **Keys**: any key's scale and chords on the neck with sound on every tap,
   each chord in three CAGED zones, circle neighbours, a capo helper, six "why
   it works" cards heard before read, and **Find my key**: play a phrase and
@@ -53,9 +55,10 @@ works today:
   threshold).
 - **Progress** leads with delayed retests, transfer and the chord-tone hit
   rate, then a per-skill report and the experiment arms, and loads another
-  learner's export read-only. `research/R5-measurement.md`,
+  learner's export read-only, or several at once as a cohort with the
+  experiment arms pooled. `research/R5-measurement.md`,
   `docs/pilot-kit.md` and `docs/teacher-interview-guide.md` carry the pilot.
-- 698 unit tests and 34 Playwright specs (`pnpm e2e`) pass.
+- 708 unit tests and 37 Playwright specs (`pnpm e2e`) pass.
 
 Not yet: chord detection, real-song clips, sync.
 

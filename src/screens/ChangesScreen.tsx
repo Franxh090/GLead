@@ -140,6 +140,9 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
       retest: 'none',
       unseenKey: isUnseenKey(key),
       purpose: 'practice',
+      approach: r.approach,
+      passing: r.between,
+      ...(r.betweenInKey === null ? {} : { passingInKey: r.betweenInKey }),
     }));
     for (const e of events) await app.repo.logTrial(e);
     await app.repo.saveSession({
@@ -164,7 +167,7 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
       : chosenKey;
     setTakeKey(k);
     const loopChords = progressionChords(k, progression.numerals);
-    const scorer = createChangeScorer({ chords: loopChords, rung, bpm });
+    const scorer = createChangeScorer({ chords: loopChords, rung, bpm, key: k });
     scorer.start();
     scorerRef.current = scorer;
     passRef.current = -1;
@@ -439,6 +442,14 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             {keyName(key)}
             {isUnseenKey(key) ? t('changes.unseen') : ''} · {t(`rung.${rung}.title`)}
           </p>
+          <p className={styles.muted}>
+            {t('changes.approachSummary', {
+              step: records.filter((r) => r.approach === 'step').length,
+              landed: records.filter((r) => r.midi !== null && r.approach !== 'none').length,
+              passing: records.reduce((n, r) => n + r.between, 0),
+              inKey: records.reduce((n, r) => n + (r.betweenInKey ?? 0), 0),
+            })}
+          </p>
           <div className={styles.scroll}>
             <table className={styles.table}>
               <thead>
@@ -448,6 +459,8 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
                   <th>{t('changes.colWanted')}</th>
                   <th>{t('changes.colPlayed')}</th>
                   <th>{t('changes.colTiming')}</th>
+                  <th>{t('changes.colApproach')}</th>
+                  <th>{t('changes.colBetween')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -467,6 +480,14 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
                       {r.offsetMs === null
                         ? '—'
                         : `${r.offsetMs > 0 ? '+' : ''}${Math.round(r.offsetMs)} ms`}
+                    </td>
+                    <td className={styles.muted}>
+                      {r.midi === null ? '—' : t(`changes.approach.${r.approach}`)}
+                    </td>
+                    <td className={styles.muted}>
+                      {r.betweenInKey === null
+                        ? r.between
+                        : t('changes.betweenCell', { n: r.between, inKey: r.betweenInKey })}
                     </td>
                   </tr>
                 ))}

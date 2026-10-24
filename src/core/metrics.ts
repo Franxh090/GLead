@@ -90,6 +90,23 @@ export function responseInKeyRate(trials: readonly TrialEvent[], drillId = 'c4-r
   return tallyAll(trials.filter((t) => t.drillId === drillId));
 }
 
+/** Landings reached by step (PRD C1, passing notes), over play-along changes where a note was landed after another. */
+export function stepApproachRate(trials: readonly TrialEvent[], drillId = 'c1-changes'): Tally {
+  const landed = trials.filter(
+    (t) => t.drillId === drillId && t.approach !== undefined && t.approach !== 'none',
+  );
+  return { trials: landed.length, correct: landed.filter((t) => t.approach === 'step').length };
+}
+
+/** Passing notes between changes: how many were played (`trials`) and how many stayed in the key (`correct`). */
+export function passingNotes(trials: readonly TrialEvent[], drillId = 'c1-changes'): Tally {
+  const rows = trials.filter((t) => t.drillId === drillId && t.passing !== undefined);
+  return {
+    trials: rows.reduce((n, t) => n + (t.passing ?? 0), 0),
+    correct: rows.reduce((n, t) => n + (t.passingInKey ?? 0), 0),
+  };
+}
+
 /** The placement baseline per skill, from the placement session's trials. */
 export function placementBaseline(trials: readonly TrialEvent[]): Record<string, Tally> {
   return tallyBy(

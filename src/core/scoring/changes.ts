@@ -4,8 +4,14 @@
  * first, then 3rds, then 5ths and 7ths, then any chord tone. Pure: the
  * screen feeds it chord cues and notes with their times.
  */
-import { chromaOf, fromHarmonyQuality, type ChordSpec } from '../../vendor/fretfree/theory';
+import {
+  chromaOf,
+  fromHarmonyQuality,
+  type ChordSpec,
+  type MusicalKey,
+} from '../../vendor/fretfree/theory';
 import { chordSymbol } from '../../vendor/fretfree/theory';
+import { degreeAt } from '../keymap';
 import { toneSemitones, type ChordTone } from '../../drills/b3-chord-tone/logic';
 import type { ChordChangeHit, Scorer } from '../types';
 
@@ -67,7 +73,12 @@ export interface ChangeScorerOptions {
   earlyMs?: number;
   /** The window after the change, in beats; default one beat. */
   windowBeats?: number;
+  /** The key, so passing notes can be counted as in or out of it (PRD C1: add passing notes). */
+  key?: MusicalKey;
 }
+
+/** How a landing note was reached from the note before it. */
+export type Approach = 'step' | 'leap' | 'same' | 'none';
 
 export interface ChangeRecord extends ChordChangeHit {
   /** Index of the chord in the progression. */
@@ -81,6 +92,12 @@ export interface ChangeRecord extends ChordChangeHit {
   /** ms from the change to the note, negative when anticipated. */
   offsetMs: number | null;
   at: number;
+  /** By step (one or two semitones from the note before), by leap, the same note again, or from nothing. */
+  approach: Approach;
+  /** Notes played after this landing and before the next change: the passing notes. */
+  between: number;
+  /** How many of those sat in the key; null when the scorer was given no key. */
+  betweenInKey: number | null;
 }
 
 export interface ChangeScorer extends Scorer {
@@ -92,6 +109,8 @@ export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
   const windowMs = ((opts.windowBeats ?? 1) * 60_000) / opts.bpm;
   const records: ChangeRecord[] = [];
   const pending: { midi: number; at: number }[] = [];
+  /** Every note of the take, for approaches and passing notes. */
+  const notes: { midi: number; at: number }[] = [];
   let pass = -1;
   let open: ChangeRecord | null = null;
 
@@ -101,12 +120,26 @@ export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
     r.tone = tone;
     r.offsetMs = at - r.at;
     r.outcome = tone !== null && r.wanted.includes(tone) ? 'hit' : 'miss';
+    const before = [...notes].reverse().find((n) => n.at < at);
+    const gap = before ? Math.abs(before.midi - midi) : 0;
+    r.approach = !before ? 'none' : gap === 0 ? 'same' : gap <= 2 ? 'step' : 'leap';
+  };
+
+  /** The passing notes of `r`: after its landing (or its change, when silent) and before `until`. */
+  const closeBetween = (r: ChangeRecord, until: number) => {
+    const from = r.midi === null ? r.at : r.at + (r.offsetMs ?? 0);
+    const mids = notes.filter((n) => n.at > from && n.at < until).map((n) => n.midi);
+    r.between = mids.length;
+    r.betweenInKey = opts.key
+      ? mids.filter((m) => degreeAt(opts.key as MusicalKey, m) !== null).length
+      : null;
   };
 
   return {
     start() {
       records.length = 0;
       pending.length = 0;
+      notes.length = 0;
       pass = -1;
       open = null;
     },
@@ -125,24 +158,38 @@ export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
         outcome: 'silent',
         offsetMs: null,
         at,
+        approach: 'none',
+        between: 0,
+        betweenInKey: opts.key ? 0 : null,
       };
       // A note just before the change was aimed at it.
       const early = pending.find((n) => n.at >= at - earlyMs);
+      if (open) closeBetween(open, early ? early.at : at);
       if (early) settle(r, early.midi, early.at);
       pending.length = 0;
       records.push(r);
       open = r;
     },
     onNote(midi, at) {
+      notes.push({ midi, at });
       pending.push({ midi, at });
       if (pending.length > 8) pending.shift();
       if (!open || open.outcome !== 'silent') return;
       if (at >= open.at && at <= open.at + windowMs) settle(open, midi, at);
     },
     result() {
+      if (open) closeBetween(open, Number.POSITIVE_INFINITY);
       return records.map((r) => ({ ...r }));
     },
   };
+}
+
+/** Share of landed notes (silent changes aside) that were reached by step. */
+export function stepShare(records: readonly ChangeRecord[]): number | null {
+  const landed = records.filter((r) => r.midi !== null && r.approach !== 'none');
+  return landed.length === 0
+    ? null
+    : landed.filter((r) => r.approach === 'step').length / landed.length;
 }
 
 export function hitRate(records: readonly ChangeRecord[]): number | null {

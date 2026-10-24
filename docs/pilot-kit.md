@@ -25,7 +25,7 @@ For the four-week pilot in `research/R5-measurement.md` §4. Two audiences: the 
 ## 4. Running the pilot (the author)
 
 - **Day 0 checklist per participant:** device and browser noted; mic test result noted (what it said for an open E, A and D); placement taken; experiment arms copied from Settings ("Your experiment arms").
-- **Weekly:** open **Progress → View an export file** and load each participant's file. The dashboard shows their delayed retests, transfer, chord-tone hit rate, per-skill report and experiment arms exactly as it shows your own. Nothing is saved on your device. Note anything odd: a skill with many trials and no criterion, a confirm share above 20%, retests not run on the due day.
+- **Weekly:** open **Progress → View an export file** and load each participant's file. The dashboard shows their delayed retests, transfer, chord-tone hit rate, per-skill report and experiment arms exactly as it shows your own. Select several files at once for the cohort view: one row per participant, and the experiment arms pooled with trial and participant counts. Nothing is saved on your device. Note anything odd: a skill with many trials and no criterion, a confirm share above 20%, retests not run on the due day.
 - **Stopping rule:** a participant who reports the mic accepting wrong notes or rejecting right ones more than a few times a session switches to tap mode. Record it: that is the R2 finding.
 - **End:** the 20-minute call (R5 §4 step 5).
 

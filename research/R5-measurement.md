@@ -42,6 +42,8 @@ All per learner, per skill, computed in `src/core/metrics.ts`.
 | **Learning rate** | Least-squares slope of the 10-trial rolling accuracy against trial index, per 100 trials | `learningRate(trials)` |
 | **Detection reliability** | *Proxy until R2:* share of mic answers the learner had to confirm | `confirmShare(trials)`; R2 supplies the fixed-set numbers |
 | **Play-by-ear time** | *Proposed:* from B4's first note heard to the sequence complete; `responseMs` already holds it for B4 trials |
+| **Step approach** | Share of play-along landings reached by step (one or two semitones from the note before), over landings that had a note before them (Sprint 9; PRD C1 passing notes) | `stepApproachRate(trials)` |
+| **Passing notes in key** | Of the notes played between one landing and the next change, the share that sat in the key (Sprint 9) | `passingNotes(trials)` |
 
 Baselines: the placement session (`purpose = placement`) gives per-skill accuracy before any practice (`placementBaseline`).
 

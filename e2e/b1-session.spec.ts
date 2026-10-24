@@ -82,7 +82,7 @@ test.describe('B1 scale degree session', () => {
     await page.getByRole('button', { name: 'End session' }).click();
     await expect(page.getByRole('heading', { name: 'Session done' })).toBeVisible();
     await page.getByRole('button', { name: 'Save and finish' }).click();
-    await page.getByRole('button', { name: 'Progress' }).click();
+    await page.getByRole('button', { name: 'Progress', exact: true }).click();
     await expect(page.getByText(/over 1 trials/)).toBeVisible();
   });
 });

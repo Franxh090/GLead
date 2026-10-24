@@ -10,14 +10,17 @@ import {
   experimentReport,
   percent,
   placementBaseline,
+  passingNotes,
   practiceOnly,
   responseInKeyRate,
+  stepApproachRate,
   skillReport,
   tallyAll,
   tallyBy,
   transfer,
 } from '../core/metrics';
 import { SKILLS, skillById, skillTitle } from '../drills/registry';
+import { pooledExperiments, summariseParticipant, type ParticipantSummary } from '../core/cohort';
 import type { TrialEvent } from '../core/types';
 import { parseB1Item } from '../drills/b1-scale-degree/logic';
 import styles from '../styles/app.module.css';
@@ -48,20 +51,33 @@ export function ProgressScreen() {
   const app = useApp();
   const [own, setOwn] = useState<TrialEvent[] | null>(null);
   const [loaded, setLoaded] = useState<{ trials: TrialEvent[]; label: string } | null>(null);
+  const [cohort, setCohort] = useState<{ trials: TrialEvent[]; label: string }[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     void app.repo.trials().then(setOwn);
   }, [app]);
 
-  const onFile = async (file: File | undefined) => {
-    if (!file) return;
+  /** One file opens read-only in place of your own data; several open the cohort view. */
+  const onFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
     try {
-      const { trials: tr, exportedAt } = parseExport(await file.text());
-      setLoaded({
-        trials: tr,
-        label: t('progress.exported', { name: file.name, date: exportedAt }),
-      });
+      const parsed = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const { trials: tr, exportedAt } = parseExport(await file.text());
+          return {
+            trials: tr,
+            label: t('progress.exported', { name: file.name, date: exportedAt }),
+          };
+        }),
+      );
+      if (parsed.length === 1) {
+        setLoaded(parsed[0] ?? null);
+        setCohort(null);
+      } else {
+        setCohort(parsed);
+        setLoaded(null);
+      }
       setLoadError(null);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err));
@@ -70,6 +86,7 @@ export function ProgressScreen() {
 
   const trials = loaded ? loaded.trials : own;
   if (!trials) return <p className={styles.muted}>{t('progress.loading')}</p>;
+  if (cohort) return <CohortView cohort={cohort} onBack={() => setCohort(null)} />;
 
   const practice = practiceOnly(trials);
   const all = tallyAll(practice);
@@ -77,6 +94,8 @@ export function ProgressScreen() {
   const tr = transfer(trials);
   const hits = chordToneHitRate(trials);
   const responses = responseInKeyRate(trials);
+  const steps = stepApproachRate(trials);
+  const passing = passingNotes(trials);
   const baseline = placementBaseline(trials);
   const reports = SKILLS.filter((sk) => trials.some((t) => t.skillId === sk.id)).map((sk) =>
     skillReport(trials, sk.id),
@@ -134,6 +153,16 @@ export function ProgressScreen() {
               <th>{t('progress.responses')}</th>
               <td>{percent(accuracyOf(responses))}</td>
               <td className={styles.muted}>{t('progress.nTakes', { n: responses.trials })}</td>
+            </tr>
+            <tr>
+              <th>{t('progress.stepApproach')}</th>
+              <td>{percent(accuracyOf(steps))}</td>
+              <td className={styles.muted}>{t('progress.nLandings', { n: steps.trials })}</td>
+            </tr>
+            <tr>
+              <th>{t('progress.passing')}</th>
+              <td>{percent(accuracyOf(passing))}</td>
+              <td className={styles.muted}>{t('progress.nNotes', { n: passing.trials })}</td>
             </tr>
           </tbody>
         </table>
@@ -298,10 +327,97 @@ export function ProgressScreen() {
             accept="application/json,.json"
             aria-label={t('progress.view')}
             style={{ display: 'none' }}
-            onChange={(e) => void onFile(e.target.files?.[0])}
+            multiple
+            onChange={(e) => void onFiles(e.target.files)}
           />
         </label>
         {loadError && <span className={styles.bad}>{loadError}</span>}
+      </div>
+    </div>
+  );
+}
+
+/** Several exports at once (pilot kit §4): one row per participant, then the experiments pooled. */
+function CohortView({
+  cohort,
+  onBack,
+}: {
+  cohort: { trials: TrialEvent[]; label: string }[];
+  onBack(): void;
+}) {
+  const t = useT();
+  const skillIds = SKILLS.map((s) => s.id);
+  const rows: ParticipantSummary[] = cohort.map((c) =>
+    summariseParticipant(c.label, c.trials, skillIds),
+  );
+  const pooled = pooledExperiments(cohort);
+  return (
+    <div className={styles.card}>
+      <h2>{t('progress.cohortTitle', { n: cohort.length })}</h2>
+      <div className={styles.status} role="status">
+        {t('progress.cohortNote')}{' '}
+        <button type="button" className={styles.button} onClick={onBack}>
+          {t('progress.backMine')}
+        </button>
+      </div>
+      <div className={styles.scroll}>
+        <table
+          className={styles.table}
+          aria-label={t('progress.cohortTitle', { n: cohort.length })}
+        >
+          <thead>
+            <tr>
+              <th>{t('progress.colParticipant')}</th>
+              <th>{t('progress.colTrials')}</th>
+              <th>{t('progress.colSessions')}</th>
+              <th>{t('progress.colPlacement')}</th>
+              <th>{t('progress.colAtCriterion')}</th>
+              <th>7d</th>
+              <th>30d</th>
+              <th>{t('progress.colTransfer')}</th>
+              <th>{t('progress.colHits')}</th>
+              <th>{t('progress.colConfirm')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.label}>
+                <td>{r.label}</td>
+                <td>{r.trials}</td>
+                <td>{r.sessions}</td>
+                <td>{percent(accuracyOf(r.placement))}</td>
+                <td>{r.skillsAtCriterion.map(skillTitle).join(', ') || '—'}</td>
+                <td>{percent(accuracyOf(r.retest7))}</td>
+                <td>{percent(accuracyOf(r.retest30))}</td>
+                <td>{percent(accuracyOf(r.transfer))}</td>
+                <td>{percent(accuracyOf(r.hits))}</td>
+                <td>{percent(r.confirmShare)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h3>{t('progress.pooled')}</h3>
+      <div className={styles.scroll}>
+        <table className={styles.table} aria-label={t('progress.pooled')}>
+          <tbody>
+            {pooled.map((e) => (
+              <tr key={e.id}>
+                <th>{t(`exp.${e.id}`)}</th>
+                {e.arms.map((a) => (
+                  <td key={a.id}>
+                    {t(`exp.${e.id}.${a.id}`)}:{' '}
+                    {t('progress.pooledCell', {
+                      pct: percent(accuracyOf(a.tally)),
+                      trials: a.tally.trials,
+                      participants: a.participants,
+                    })}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

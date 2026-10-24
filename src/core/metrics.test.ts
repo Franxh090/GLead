@@ -5,7 +5,9 @@ import {
   delayed,
   experimentReport,
   learningRate,
+  passingNotes,
   responseInKeyRate,
+  stepApproachRate,
   skillReport,
   tallyBy,
   targetsByDefault,
@@ -119,6 +121,19 @@ describe('metrics', () => {
     expect(responseInKeyRate(trials)).toEqual({ trials: 2, correct: 1 });
     const graded = experimentReport(trials)[0]!.arms.reduce((n, a) => n + a.tally.trials, 0);
     expect(graded).toBe(1);
+  });
+
+  it('measures approaches by step and passing notes in key over Changes trials', () => {
+    const c = (o: Partial<TrialEvent>) => t({ drillId: 'c1-changes', skillId: 'C1.ladder', ...o });
+    const trials = [
+      c({ approach: 'none', passing: 2, passingInKey: 1 }),
+      c({ approach: 'step', passing: 0, passingInKey: 0 }),
+      c({ approach: 'leap', passing: 3, passingInKey: 3 }),
+      c({ approach: 'step' }),
+      t({ approach: 'step' }),
+    ];
+    expect(stepApproachRate(trials)).toEqual({ trials: 3, correct: 2 });
+    expect(passingNotes(trials)).toEqual({ trials: 5, correct: 4 });
   });
 
   it('hides the targets once two takes in a row land 80%', () => {

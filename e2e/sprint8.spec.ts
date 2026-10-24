@@ -40,7 +40,7 @@ test.describe('C4 call and response', () => {
     await expect(page.getByText(/Trial 2 of/)).toBeVisible();
     await page.getByRole('button', { name: 'End session' }).click();
     await page.getByRole('button', { name: 'Save and finish' }).click();
-    await page.getByRole('button', { name: 'Progress' }).click();
+    await page.getByRole('button', { name: 'Progress', exact: true }).click();
     await expect(page.getByRole('row', { name: /Responses in key/ })).toContainText('1 takes');
   });
 

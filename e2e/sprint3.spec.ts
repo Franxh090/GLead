@@ -29,7 +29,7 @@ test.describe('Changes: play into the gaps', () => {
     const rows = page.getByRole('table').getByRole('row');
     await expect(rows).toHaveCount(5); // header + four changes
     await expect(rows.nth(1)).toContainText('Root');
-    await page.getByRole('button', { name: 'Progress' }).click();
+    await page.getByRole('button', { name: 'Progress', exact: true }).click();
     await expect(page.getByRole('row', { name: /Chord-tone hit rate/ })).toContainText('4 changes');
   });
 });
@@ -55,7 +55,7 @@ test.describe('Placement', () => {
     await expect(page.getByRole('heading', { name: 'Placement done' })).toBeVisible();
     await page.getByRole('button', { name: 'Save and finish' }).click();
     await expect(page.getByRole('region', { name: 'Placement' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Progress' }).click();
+    await page.getByRole('button', { name: 'Progress', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Placement baseline' })).toBeVisible();
   });
 

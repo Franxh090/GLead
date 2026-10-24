@@ -226,6 +226,11 @@ export interface TrialEvent {
   purpose?: SessionPurpose;
   /** The week's practice schedule (absent before Sprint 5: interleaved). */
   schedule?: 'interleaved' | 'blocked';
+  /** Changes only (Sprint 9): how the landing note was reached. */
+  approach?: 'step' | 'leap' | 'same' | 'none';
+  /** Changes only (Sprint 9): passing notes before the next change, and how many stayed in key. */
+  passing?: number;
+  passingInKey?: number;
 }
 
 export interface SessionRecord {

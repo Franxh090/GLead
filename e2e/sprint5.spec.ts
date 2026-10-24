@@ -38,7 +38,7 @@ test.describe('Progress: export viewer', () => {
       .click();
     await page.getByRole('button', { name: 'End session' }).click();
     await page.getByRole('button', { name: 'Save and finish' }).click();
-    await page.getByRole('button', { name: 'Progress' }).click();
+    await page.getByRole('button', { name: 'Progress', exact: true }).click();
     const file = {
       name: 'participant-3.json',
       mimeType: 'application/json',

@@ -90,7 +90,7 @@ test.describe('Dashboard (D4)', () => {
       .click();
     await page.getByRole('button', { name: 'End session' }).click();
     await page.getByRole('button', { name: 'Save and finish' }).click();
-    await page.getByRole('button', { name: 'Progress' }).click();
+    await page.getByRole('button', { name: 'Progress', exact: true }).click();
     await expect(page.getByRole('table', { name: 'Skills' })).toContainText(
       'Scale degrees in a major key',
     );
