@@ -11,6 +11,8 @@ import findMelody from './b4-find-melody/drill';
 import { B4_SKILLS } from './b4-find-melody/logic';
 import spotError from './b5-spot-error/drill';
 import { B5_SKILLS } from './b5-spot-error/logic';
+import intervals from './b8-intervals/drill';
+import { B8_SKILLS } from './b8-intervals/logic';
 
 export const DRILLS: readonly AnyDrill[] = [
   scaleDegree,
@@ -18,6 +20,7 @@ export const DRILLS: readonly AnyDrill[] = [
   chordTone,
   findMelody,
   spotError,
+  intervals,
 ];
 
 /** Skills in curriculum order (PRD §12 levels 1–3). `mode` picks the key pool a prompt draws from. */
@@ -33,6 +36,8 @@ export const SKILLS: readonly (Skill & { mode: KeyMode })[] = [
   B2_SKILLS[2]!,
   B5_SKILLS[1]!,
   B4_SKILLS[1]!,
+  B8_SKILLS[0]!,
+  B8_SKILLS[1]!,
 ];
 
 export function drillById(id: string): AnyDrill {

@@ -6,6 +6,7 @@
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_SETTINGS, type Settings } from './events/db';
 import { assignArms, encodeArms } from './experiments';
+import { detectLanguage, setLanguage } from './i18n';
 import type { Repo } from './events/repo';
 
 export interface SettingsStore {
@@ -31,6 +32,7 @@ export function createSettingsStore(repo: Repo): SettingsStore {
     },
     async update(patch) {
       settings = { ...settings, ...patch };
+      if (patch.language) setLanguage(patch.language);
       emit();
       await repo.saveSettings(patch);
     },
@@ -49,6 +51,13 @@ export function createSettingsStore(repo: Repo): SettingsStore {
           labelScheme: arms.labels,
         });
       }
+      // First run: the browser's language, if GLead has it.
+      if (!(await repo.hasSettings())) {
+        settings = await repo.saveSettings({
+          language: detectLanguage(globalThis.navigator?.language),
+        });
+      }
+      setLanguage(settings.language);
       loaded = true;
       emit();
       return settings;

@@ -261,7 +261,7 @@ export function b3FeedbackAudio(prompt: B3Prompt, fb: Feedback<B3Answer>): Audio
   ];
 }
 
-const QUALITY_WORDS: Partial<Record<ChordQuality, string>> = {
+export const QUALITY_WORDS: Partial<Record<ChordQuality, string>> = {
   major: 'major',
   minor: 'minor',
   dominant7: 'dominant seventh',

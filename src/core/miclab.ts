@@ -13,7 +13,13 @@
  *
  * Pure: the screen feeds results in and reads the summary out.
  */
-import { STANDARD_TUNING, midiAt, midiToFretNote, type Position } from '../vendor/fretfree/theory';
+import {
+  STANDARD_TUNING,
+  midiAt,
+  midiToFretNote,
+  type Position,
+  type Tuning,
+} from '../vendor/fretfree/theory';
 import { pitchMatches } from '../vendor/fretfree/mic/tracker';
 
 export type MicLabPart = 'notes' | 'wrong' | 'latency';
@@ -44,20 +50,20 @@ export const WRONG_SET: readonly Position[] = [
 ];
 export const LATENCY = { clicks: 12, bpm: 60, windowMs: 700 } as const;
 
-export function micLabPrompts(): MicLabPrompt[] {
+export function micLabPrompts(tuning: Tuning = STANDARD_TUNING): MicLabPrompt[] {
   const notes = NOTE_SET.map((p, index) => ({
     part: 'notes' as const,
     index,
     position: p,
     play: p,
-    expectedMidi: midiAt(p, STANDARD_TUNING),
+    expectedMidi: midiAt(p, tuning),
   }));
   const wrong = WRONG_SET.map((p, index) => ({
     part: 'wrong' as const,
     index,
     position: p,
     play: { string: p.string, fret: p.fret + 1 },
-    expectedMidi: midiAt(p, STANDARD_TUNING),
+    expectedMidi: midiAt(p, tuning),
   }));
   return [...notes, ...wrong];
 }

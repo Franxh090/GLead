@@ -1,7 +1,9 @@
+import { useT } from '../../core/i18n';
 import type { DrillRenderProps } from '../../core/types';
+import { keyName } from '../../vendor/fretfree/theory';
 import styles from '../../styles/app.module.css';
 import { AnswerNeck, ConfirmPanel, ReplayRow, feedbackMarkers } from '../shared/parts';
-import { B4_REGION, b4FeedbackPositions, b4Question, type B4Answer, type B4Prompt } from './logic';
+import { B4_REGION, b4FeedbackPositions, type B4Answer, type B4Prompt } from './logic';
 
 export function B4View({
   prompt,
@@ -16,6 +18,7 @@ export function B4View({
   onConfirm,
   onReplay,
 }: DrillRenderProps<B4Prompt, B4Answer>) {
+  const t = useT();
   const canAnswer = listening && !feedback;
   const markers = feedbackMarkers(
     feedback ? b4FeedbackPositions(prompt, feedback) : null,
@@ -30,11 +33,11 @@ export function B4View({
       data-target-midi={prompt.midis[0]}
       data-target-midis={prompt.midis.join(',')}
     >
-      <p>{b4Question(prompt)}</p>
+      <p>{t('b4.question', { key: keyName(prompt.key), n: prompt.midis.length })}</p>
       <ReplayRow listening={canAnswer} onReplay={onReplay} />
       {canAnswer && (
         <p className={styles.muted} aria-live="polite">
-          Heard {collected.length} of {prompt.midis.length}.
+          {t('drill.heard', { n: collected.length, total: prompt.midis.length })}
         </p>
       )}
       <ConfirmPanel pending={pending} onConfirm={onConfirm} />

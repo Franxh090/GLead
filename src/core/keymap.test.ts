@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diatonicChord, parseKey } from '../vendor/fretfree/theory';
+import { DROP_D_TUNING, diatonicChord, parseKey } from '../vendor/fretfree/theory';
 import {
   cagedQualityOf,
   chordMarkers,
@@ -43,5 +43,13 @@ describe('key map', () => {
     expect(cagedQualityOf({ root: 'B', quality: 'diminished' })).toBeNull();
     expect(chordZones({ root: 'B', quality: 'diminished' })).toEqual([]);
     expect(cagedQualityOf({ root: 'D', quality: 'minor7' })).toBe('minor');
+  });
+
+  it('follows the tuning for scale markers and gives no CAGED zones outside standard tuning', () => {
+    const std = scaleMarkers(parseKey('D'), 'numbers');
+    const drop = scaleMarkers(parseKey('D'), 'numbers', undefined, DROP_D_TUNING);
+    expect(drop.some((m) => m.string === 6 && m.fret === 0 && m.style === 'root')).toBe(true);
+    expect(std.some((m) => m.string === 6 && m.fret === 0 && m.style === 'root')).toBe(false);
+    expect(chordZones({ root: 'G', quality: 'major' }, 3, DROP_D_TUNING)).toEqual([]);
   });
 });

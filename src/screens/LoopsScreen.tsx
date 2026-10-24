@@ -8,6 +8,7 @@ import {
   progressionChords,
   type KeyMode,
   type MusicalKey,
+  getTuning,
 } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { createBackingLoop } from '../audio/backing-loop';
@@ -35,6 +36,7 @@ const TONE_STYLE: Record<number, FretMarker['style']> = {
 export function LoopsScreen() {
   const app = useApp();
   const settings = useSettings(app.settings);
+  const tuning = getTuning(settings.tuning);
   const [progressionId, setProgressionId] = useState(LOOP_PROGRESSIONS[0]!.id);
   const [tonic, setTonic] = useState<Record<KeyMode, string>>({ major: 'G', minor: 'Am' });
   const [bpm, setBpm] = useState<number>(80);
@@ -88,7 +90,7 @@ export function LoopsScreen() {
   const sounding = current !== null ? chords[current] : null;
   const markers: FretMarker[] = sounding
     ? chordTones(sounding).flatMap((pc, i) =>
-        positionsOfPitchClass(pc, { fretRange: { from: 0, to: 12 } }).map((p) => ({
+        positionsOfPitchClass(pc, { fretRange: { from: 0, to: 12 }, tuning }).map((p) => ({
           ...p,
           style: TONE_STYLE[i] ?? 'tone',
           label: displayPc(pc),
@@ -207,6 +209,7 @@ export function LoopsScreen() {
       </div>
       <div className={styles.neck}>
         <Fretboard
+          tuning={tuning}
           fretRange={{ from: 0, to: 12 }}
           handedness={settings.handedness}
           markers={markers}

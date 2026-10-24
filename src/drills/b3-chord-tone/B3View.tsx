@@ -1,3 +1,4 @@
+import { useT } from '../../core/i18n';
 import type { DrillRenderProps } from '../../core/types';
 import { displayPc } from '../../vendor/fretfree/theory/pitch-display';
 import styles from '../../styles/app.module.css';
@@ -6,7 +7,7 @@ import {
   B3_REGION,
   TONE_NAMES,
   b3FeedbackPositions,
-  b3Question,
+  QUALITY_WORDS,
   type B3Answer,
   type B3Prompt,
 } from './logic';
@@ -23,6 +24,7 @@ export function B3View({
   onConfirm,
   onReplay,
 }: DrillRenderProps<B3Prompt, B3Answer>) {
+  const t = useT();
   const canAnswer = listening && !feedback;
   const markers = feedbackMarkers(
     feedback ? b3FeedbackPositions(prompt, feedback) : null,
@@ -33,13 +35,13 @@ export function B3View({
   );
   return (
     <div className={styles.card} data-target-midi={prompt.targetMidi}>
-      <p>{b3Question(prompt)}</p>
+      <p>{t('b3.question', { quality: QUALITY_WORDS[prompt.quality] ?? prompt.quality })}</p>
       <ReplayRow listening={canAnswer} onReplay={onReplay} />
       <ConfirmPanel pending={pending} onConfirm={onConfirm} />
       <ChoiceGrid
-        label="Chord tone"
+        label={t('b3.group')}
         columns={prompt.tones.length}
-        choices={prompt.tones.map((t) => ({ id: t, label: TONE_NAMES[t] }))}
+        choices={prompt.tones.map((tone) => ({ id: tone, label: t(`tone.${TONE_NAMES[tone]}`) }))}
         disabled={!canAnswer}
         onChoose={(id) =>
           onTap({ kind: 'tap', degree: Number(id), confidence: 1, at: performance.now() })

@@ -9,6 +9,7 @@ import {
   positionsOfPitchClass,
   progressionChords,
   type MusicalKey,
+  getTuning,
 } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { createBackingLoop } from '../audio/backing-loop';
@@ -67,6 +68,7 @@ export function rungForSkills(skillIds: readonly string[]): Rung {
 export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null }) {
   const app = useApp();
   const settings = useSettings(app.settings);
+  const tuning = getTuning(settings.tuning);
   const [progressionId, setProgressionId] = useState(LOOP_PROGRESSIONS[0]!.id);
   const [tonic, setTonic] = useState<Record<'major' | 'minor', string>>({
     major: 'G',
@@ -223,7 +225,7 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
     for (const t of wanted) {
       const pc = tones[['1', '3', '5', '7'].indexOf(t)];
       if (!pc) continue;
-      for (const p of positionsOfPitchClass(pc, { fretRange: { from: 0, to: 12 } })) {
+      for (const p of positionsOfPitchClass(pc, { fretRange: { from: 0, to: 12 }, tuning })) {
         markers.push({
           ...p,
           style: TONE_STYLE[t] ?? 'tone',
@@ -412,6 +414,7 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
       )}
       <div className={styles.neck}>
         <Fretboard
+          tuning={tuning}
           fretRange={{ from: 0, to: 12 }}
           handedness={settings.handedness}
           markers={markers}
@@ -420,7 +423,7 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
           accidentalPref={settings.accidentalPref}
           onTapCell={
             take === 'playing'
-              ? (p) => scorerRef.current?.onNote(midiAt(p), performance.now())
+              ? (p) => scorerRef.current?.onNote(midiAt(p, tuning), performance.now())
               : undefined
           }
           label="Fretboard: play or tap a chord tone at each change"

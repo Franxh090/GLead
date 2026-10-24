@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Fretboard } from '../vendor/fretfree/fretboard/Fretboard';
 import {
   diatonicChords,
   functionOf,
+  getTuning,
   keyName,
   midiAt,
   midiToFretNote,
@@ -27,6 +28,9 @@ import {
 } from '../core/keymap';
 import { degreeLabel } from '../core/keys';
 import { useSettings } from '../core/settings-store';
+import { describeFinding, findKey } from '../core/keyfinder';
+import { useT } from '../core/i18n';
+import type { InputEvent } from '../core/types';
 import { WHY_CARDS, capoHelper, keyNeighbours } from '../core/whycards';
 import { chordFromNumeral } from '../vendor/fretfree/theory';
 import styles from '../styles/app.module.css';
@@ -40,8 +44,10 @@ const MINOR_KEYS = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'Ebm', 'Bbm', 'Fm', '
  * CAGED shapes. Reference, not drill: nothing here is graded.
  */
 export function KeysScreen() {
+  const t = useT();
   const app = useApp();
   const settings = useSettings(app.settings);
+  const tuning = getTuning(settings.tuning);
   const [mode, setMode] = useState<KeyMode>('major');
   const [tonic, setTonic] = useState<Record<KeyMode, string>>({ major: 'G', minor: 'Am' });
   const [sevenths, setSevenths] = useState(false);
@@ -53,8 +59,21 @@ export function KeysScreen() {
   const key = useMemo(() => parseKey(tonic[mode]), [tonic, mode]);
   const chords = useMemo(() => diatonicChords(key, { sevenths }), [key, sevenths]);
   const chord: DiatonicChord | null = chordIndex !== null ? (chords[chordIndex] ?? null) : null;
-  const zones = useMemo(() => (chord ? chordZones(chord) : []), [chord]);
-  const markers = chord ? chordMarkers(chord) : scaleMarkers(key, settings.labelScheme);
+  const zones = useMemo(() => (chord ? chordZones(chord, 3, tuning) : []), [chord, tuning]);
+  const markers = chord
+    ? chordMarkers(chord, undefined, tuning)
+    : scaleMarkers(key, settings.labelScheme, undefined, tuning);
+  const [phrase, setPhrase] = useState<number[] | null>(null);
+  const [finding, setFinding] = useState<ReturnType<typeof findKey> | null>(null);
+  const micOn = settings.micEnabled && phrase !== null;
+  useEffect(() => {
+    if (!micOn) return;
+    const mic = app.mic();
+    void mic.start().catch(() => undefined);
+    return mic.onEvent((e: InputEvent) => {
+      if (e.midi !== undefined) setPhrase((ph) => (ph ? [...ph, e.midi as number] : ph));
+    });
+  }, [micOn, app]);
 
   const strum = (c: DiatonicChord, i: number) => {
     setChordIndex(i);
@@ -64,7 +83,7 @@ export function KeysScreen() {
     ]);
   };
   const tapCell = (p: { string: number; fret: number }) => {
-    const midi = midiAt(p);
+    const midi = midiAt(p, tuning);
     const name = midiToFretNote(midi, settings.accidentalPref).name;
     const d = degreeAt(key, midi);
     setHeard(
@@ -75,7 +94,7 @@ export function KeysScreen() {
 
   return (
     <div className={styles.card}>
-      <h2>Keys</h2>
+      <h2>{t('keys.title')}</h2>
       <p className={styles.muted}>
         The key on the neck: its scale by degree, its chords by number and job. Tap anything to hear
         it. Tap a chord to see its tones and three places to play it.
@@ -185,6 +204,7 @@ export function KeysScreen() {
       </div>
       <div className={styles.neck}>
         <Fretboard
+          tuning={tuning}
           fretRange={KEY_REGION}
           handedness={settings.handedness}
           markers={markers}
@@ -237,6 +257,43 @@ export function KeysScreen() {
           )}
         </section>
       )}
+      <section aria-label={t('keys.findKey')}>
+        <h3>{t('keys.findKey')}</h3>
+        <p className={styles.muted}>{t('keys.findKeyBlurb')}</p>
+        <div className={styles.row}>
+          {phrase === null ? (
+            <button
+              type="button"
+              className={styles.button}
+              disabled={!settings.micEnabled}
+              onClick={() => {
+                setPhrase([]);
+                setFinding(null);
+              }}
+            >
+              {t('keys.findKeyStart')}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={`${styles.button} ${styles.primary}`}
+              onClick={() => {
+                setFinding(findKey(phrase));
+                setPhrase(null);
+              }}
+            >
+              {t('keys.findKeyDone')} ({phrase.length})
+            </button>
+          )}
+          {finding && (
+            <span className={styles.status} role="status">
+              {finding.best
+                ? t('keys.findKeyResult', describeFinding(finding))
+                : t('keys.findKeyNone')}
+            </span>
+          )}
+        </div>
+      </section>
       <section aria-label="Around the circle">
         <h3>Around the circle</h3>
         <p className={styles.muted}>

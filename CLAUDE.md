@@ -25,7 +25,7 @@ product definition is `docs/prd-concise.md`; the evidence behind it is
 ## Layout (`src/`)
 
 - `vendor/fretfree/`: theory (tonal), mic (pitchy in an AudioWorklet), audio (Tone.js guitar, strums, progressions), fretboard SVG, FSRS grading/scheduler/adaptive band.
-- `core/`: GLead's own engine. `types.ts` (InputAdapter, Drill, Scorer, BackingLoop, TrialEvent), `input/` (tap, mic adapters), `events/` (Dexie log + export), `scheduling/` (session plan, placement, retests), `scoring/` (play-along change scorer), `session/` (runner; a session's `purpose` is practice, placement or retest; a drill that `accumulate`s collects a sequence of notes), `experiments.ts` (arms dealt once, conditions drawn per trial, the weekly schedule), `keymap.ts` and `whycards.ts` (the Keys screen's pure helpers), `miclab.ts` (the R2 protocol and its summary), `metrics.ts` (every dashboard number).
+- `core/`: GLead's own engine. `types.ts` (InputAdapter, Drill, Scorer, BackingLoop, TrialEvent), `input/` (tap, mic adapters), `events/` (Dexie log + export), `scheduling/` (session plan, placement, retests), `scoring/` (play-along change scorer), `session/` (runner; a session's `purpose` is practice, placement or retest; a drill that `accumulate`s collects a sequence of notes), `experiments.ts` (arms dealt once, conditions drawn per trial, the weekly schedule), `keymap.ts` and `whycards.ts` (the Keys screen's pure helpers), `miclab.ts` (the R2 protocol and its summary), `keyfinder.ts` (key from a played phrase), `i18n.ts` (`t()` and `useT()`; English and Spanish, English fallback; the test keeps Spanish complete), `metrics.ts` (every dashboard number).
 - `audio/`: cadences and backing loops built on the vendored audio engine.
 - `drills/`: one folder per drill, `logic.ts` pure and tested, view in `.tsx`.
 - `screens/`: Today, Session, Keys (A1/A2 reference), Changes (play-along), Loops, Progress (also views another learner's export read-only), Settings, Mic lab (from Settings).
@@ -34,5 +34,6 @@ product definition is `docs/prd-concise.md`; the evidence behind it is
 
 - TypeScript strict with `noUncheckedIndexedAccess`. Pure modules take `now` and `rng` as arguments.
 - Pure logic gets unit tests. UI gets RTL tests and, later, Playwright.
+- User-facing text goes through `t('key')` with the string in both dictionaries in `core/i18n.ts`; musical names and the trial log stay in English.
 - CSS Modules plus `styles/tokens.css`. Dark first. Okabe–Ito colours on the neck; distinguish markers by shape as well as colour.
 - Commit messages: imperative subject, body says why.

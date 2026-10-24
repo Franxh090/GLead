@@ -19,6 +19,7 @@ import {
   type DiatonicChord,
   type FretRange,
   type MusicalKey,
+  type Tuning,
 } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { DEGREES, degreeLabel, degreeNote } from './keys';
@@ -31,11 +32,12 @@ export function scaleMarkers(
   key: MusicalKey,
   scheme: LabelScheme,
   region = KEY_REGION,
+  tuning: Tuning = STANDARD_TUNING,
 ): FretMarker[] {
   return DEGREES.flatMap((d) => {
     const pc = degreeNote(key, d);
     const label = degreeLabel(d, scheme, key.mode);
-    return positionsOfPitchClass(pc, { fretRange: region }).map((p) => ({
+    return positionsOfPitchClass(pc, { fretRange: region, tuning }).map((p) => ({
       ...p,
       style: d === 1 ? ('root' as const) : ('tone' as const),
       label,
@@ -48,9 +50,13 @@ export function scaleMarkers(
 const TONE_STYLES = ['root', 'third', 'fifth', 'seventh'] as const;
 
 /** A chord's tones in frets 0–12: root square, 3rd circle, 5th triangle, 7th hexagon. */
-export function chordMarkers(chord: ChordSpec, region = KEY_REGION): FretMarker[] {
+export function chordMarkers(
+  chord: ChordSpec,
+  region = KEY_REGION,
+  tuning: Tuning = STANDARD_TUNING,
+): FretMarker[] {
   return chordTones(chord).flatMap((pc, i) =>
-    positionsOfPitchClass(pc, { fretRange: region }).map((p) => ({
+    positionsOfPitchClass(pc, { fretRange: region, tuning }).map((p) => ({
       ...p,
       style: TONE_STYLES[i] ?? ('tone' as const),
       label: displayPc(pc),
@@ -82,10 +88,18 @@ export function cagedQualityOf(chord: ChordSpec): CagedQuality | null {
   }
 }
 
-/** Three zones up the neck, lowest first: the three lowest CAGED placements that fit under fret 15. */
-export function chordZones(chord: ChordSpec, count = 3): CagedShape[] {
+/**
+ * Three zones up the neck, lowest first: the three lowest CAGED placements
+ * that fit under fret 15. CAGED shapes are standard-tuning grips, so another
+ * tuning gets none.
+ */
+export function chordZones(
+  chord: ChordSpec,
+  count = 3,
+  tuning: Tuning = STANDARD_TUNING,
+): CagedShape[] {
   const quality = cagedQualityOf(chord);
-  if (!quality) return [];
+  if (!quality || tuning.id !== 'standard') return [];
   const shapes = CAGED_ORDER.map((shape) => cagedShape(shape, chord.root, { quality }))
     .filter((s) => Math.max(...s.notes.map((n) => n.fret)) <= 15)
     .sort(

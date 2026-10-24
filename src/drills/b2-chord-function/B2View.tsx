@@ -1,8 +1,10 @@
+import { useT } from '../../core/i18n';
 import type { DrillRenderProps } from '../../core/types';
 import { displayPc } from '../../vendor/fretfree/theory/pitch-display';
+import { keyName } from '../../vendor/fretfree/theory';
 import styles from '../../styles/app.module.css';
 import { AnswerNeck, ChoiceGrid, ConfirmPanel, ReplayRow, feedbackMarkers } from '../shared/parts';
-import { B2_REGION, b2FeedbackPositions, b2Question, type B2Answer, type B2Prompt } from './logic';
+import { B2_REGION, b2FeedbackPositions, type B2Answer, type B2Prompt } from './logic';
 
 export function B2View({
   prompt,
@@ -16,6 +18,7 @@ export function B2View({
   onConfirm,
   onReplay,
 }: DrillRenderProps<B2Prompt, B2Answer>) {
+  const t = useT();
   const canAnswer = listening && !feedback;
   const markers = feedbackMarkers(
     feedback ? b2FeedbackPositions(prompt, feedback) : null,
@@ -26,11 +29,11 @@ export function B2View({
   );
   return (
     <div className={styles.card} data-target-midi={prompt.rootMidi}>
-      <p>{b2Question(prompt)}</p>
+      <p>{t('b2.question', { key: keyName(prompt.key) })}</p>
       <ReplayRow listening={canAnswer} onReplay={onReplay} />
       <ConfirmPanel pending={pending} onConfirm={onConfirm} />
       <ChoiceGrid
-        label="Roman numeral"
+        label={t('b2.group')}
         choices={prompt.choices.map((n) => ({ id: n, label: n }))}
         disabled={!canAnswer}
         onChoose={(id) =>

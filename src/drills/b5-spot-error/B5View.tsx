@@ -1,7 +1,9 @@
+import { useT } from '../../core/i18n';
 import type { DrillRenderProps } from '../../core/types';
+import { keyName } from '../../vendor/fretfree/theory';
 import styles from '../../styles/app.module.css';
 import { ChoiceGrid, ReplayRow } from '../shared/parts';
-import { b5Explain, b5Question, type B5Answer, type B5Prompt } from './logic';
+import { b5Explain, type B5Answer, type B5Prompt } from './logic';
 
 export function B5View({
   prompt,
@@ -10,13 +12,14 @@ export function B5View({
   listening,
   onReplay,
 }: DrillRenderProps<B5Prompt, B5Answer>) {
+  const t = useT();
   const canAnswer = listening && !feedback;
   return (
     <div className={styles.card} data-wrong-at={prompt.wrongAt}>
-      <p>{b5Question(prompt)}</p>
+      <p>{t(prompt.kind === 'chord' ? 'b5.chord' : 'b5.note', { key: keyName(prompt.key) })}</p>
       <ReplayRow listening={canAnswer} onReplay={onReplay} />
       <ChoiceGrid
-        label={prompt.kind === 'chord' ? 'Which chord' : 'Which note'}
+        label={t(prompt.kind === 'chord' ? 'b5.whichChord' : 'b5.whichNote')}
         columns={prompt.labels.length}
         choices={prompt.labels.map((l, i) => ({ id: String(i + 1), label: l }))}
         disabled={!canAnswer}

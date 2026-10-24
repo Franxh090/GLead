@@ -10,6 +10,10 @@ import type { MicLabRun } from '../miclab';
 
 export interface Settings {
   key: 'singleton';
+  /** Interface language (PRD D7). */
+  language: 'en' | 'es';
+  /** A FretFree tuning id: `standard`, `drop-d`. */
+  tuning: string;
   handedness: Handedness;
   accidentalPref: AccidentalPref;
   labelScheme: LabelScheme;
@@ -30,6 +34,8 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   key: 'singleton',
+  language: 'en',
+  tuning: 'standard',
   handedness: 'right',
   accidentalPref: 'sharp',
   labelScheme: 'numbers',

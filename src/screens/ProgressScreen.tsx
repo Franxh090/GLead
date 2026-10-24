@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../core/app-context';
+import { useT } from '../core/i18n';
 import { exportJson } from '../core/events/repo';
 import {
   accuracyOf,
@@ -42,6 +43,7 @@ export function parseExport(text: string): { trials: TrialEvent[]; exportedAt: s
 }
 
 export function ProgressScreen() {
+  const t = useT();
   const app = useApp();
   const [own, setOwn] = useState<TrialEvent[] | null>(null);
   const [loaded, setLoaded] = useState<{ trials: TrialEvent[]; label: string } | null>(null);
@@ -84,7 +86,7 @@ export function ProgressScreen() {
 
   return (
     <div className={styles.card}>
-      <h2>Progress</h2>
+      <h2>{t('progress.title')}</h2>
       {loaded && (
         <div className={styles.status} role="status">
           Viewing <strong>{loaded.label}</strong>, read-only. Nothing from it is saved here.{' '}
@@ -93,9 +95,7 @@ export function ProgressScreen() {
           </button>
         </div>
       )}
-      <p className={styles.muted}>
-        Delayed and transfer results first: they show what stuck, not what felt fluent today.
-      </p>
+      <p className={styles.muted}>{t('progress.blurb')}</p>
       <table className={styles.table}>
         <tbody>
           <tr>
@@ -279,14 +279,14 @@ export function ProgressScreen() {
           className={styles.button}
           onClick={() => void exportJson(app.repo).then((j) => download('glead-export.json', j))}
         >
-          Export my data (JSON)
+          {t('progress.export')}
         </button>
         <label className={styles.button} style={{ display: 'inline-flex', alignItems: 'center' }}>
-          View an export file
+          {t('progress.view')}
           <input
             type="file"
             accept="application/json,.json"
-            aria-label="View an export file"
+            aria-label={t('progress.view')}
             style={{ display: 'none' }}
             onChange={(e) => void onFile(e.target.files?.[0])}
           />

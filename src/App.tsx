@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useT } from './core/i18n';
 import { ChangesScreen } from './screens/ChangesScreen';
 import { KeysScreen } from './screens/KeysScreen';
 import { LoopsScreen } from './screens/LoopsScreen';
@@ -13,6 +14,7 @@ type Screen =
   'today' | 'session' | 'keys' | 'changes' | 'loops' | 'progress' | 'settings' | 'miclab';
 
 export function App() {
+  const t = useT();
   const [screen, setScreen] = useState<Screen>('today');
   const [session, setSession] = useState<SessionOptions | null>(null);
   const [preset, setPreset] = useState<PlayAlongPreset | null>(null);
@@ -37,12 +39,12 @@ export function App() {
     <div className={styles.shell}>
       <nav className={styles.nav} aria-label="Main">
         <span className={styles.brand}>GLead</span>
-        {tab('today', 'Today')}
-        {tab('keys', 'Keys')}
-        {tab('changes', 'Changes')}
-        {tab('loops', 'Loops')}
-        {tab('progress', 'Progress')}
-        {tab('settings', 'Settings')}
+        {tab('today', t('nav.today'))}
+        {tab('keys', t('nav.keys'))}
+        {tab('changes', t('nav.changes'))}
+        {tab('loops', t('nav.loops'))}
+        {tab('progress', t('nav.progress'))}
+        {tab('settings', t('nav.settings'))}
       </nav>
       <main>
         {screen === 'today' && <TodayScreen onStart={start} />}

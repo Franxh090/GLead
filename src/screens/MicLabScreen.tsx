@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Fretboard, type FretMarker } from '../vendor/fretfree/fretboard/Fretboard';
-import { midiToFretNote } from '../vendor/fretfree/theory';
+import { getTuning, midiToFretNote } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { playScript } from '../audio/player';
 import { useApp } from '../core/app-context';
@@ -18,8 +18,6 @@ import styles from '../styles/app.module.css';
 type Phase = 'intro' | 'prompts' | 'latency' | 'done';
 
 const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%`);
-/** The protocol is fixed, so the prompts are built once. */
-const PROMPTS = micLabPrompts();
 
 /**
  * The Mic lab (research R2): walks the player through the note set, the
@@ -30,6 +28,8 @@ const PROMPTS = micLabPrompts();
 export function MicLabScreen({ onExit }: { onExit(): void }) {
   const app = useApp();
   const settings = useSettings(app.settings);
+  const tuning = getTuning(settings.tuning);
+  const PROMPTS = useMemo(() => micLabPrompts(tuning), [tuning]);
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
   const [records, setRecords] = useState<MicLabRecord[]>([]);
@@ -48,12 +48,16 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
 
   const record = (r: MicLabRecord) => setRecords((rs) => [...rs, r]);
   /** The next prompt, or the latency run once the prompts are done. */
-  const advance = () =>
-    setStep((st) => {
-      const next = st + 1;
-      if (next >= PROMPTS.length) setPhase('latency');
-      return next;
-    });
+  const total = PROMPTS.length;
+  const advance = useCallback(
+    () =>
+      setStep((st) => {
+        const next = st + 1;
+        if (next >= total) setPhase('latency');
+        return next;
+      }),
+    [total],
+  );
 
   // Prompts: the first stable note after the prompt appeared answers it.
   useEffect(() => {
@@ -75,7 +79,7 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
       advance();
     });
     return off;
-  }, [mic, phase, prompt]);
+  }, [mic, phase, prompt, advance]);
 
   // Latency: a click every beat; the first note within the window after a click is its pluck.
   useEffect(() => {
@@ -214,6 +218,7 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
           </p>
           <div className={styles.neck}>
             <Fretboard
+              tuning={tuning}
               fretRange={{ from: 0, to: 13 }}
               handedness={settings.handedness}
               markers={markers}

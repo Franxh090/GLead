@@ -5,6 +5,8 @@ import type { MicLabRun } from '../miclab';
 
 export interface Repo {
   getSettings(): Promise<Settings>;
+  /** Whether a settings row exists yet (first run otherwise). */
+  hasSettings(): Promise<boolean>;
   saveSettings(patch: Partial<Settings>): Promise<Settings>;
   allCards(): Promise<CardRecord[]>;
   saveCard(card: CardRecord): Promise<void>;
@@ -28,6 +30,7 @@ export function createRepo(db: GLeadDB): Repo {
       const row = await db.settings.get('singleton');
       return { ...DEFAULT_SETTINGS, ...row };
     },
+    hasSettings: async () => (await db.settings.get('singleton')) !== undefined,
     async saveSettings(patch) {
       const current = await this.getSettings();
       const next = { ...current, ...patch, key: 'singleton' as const };

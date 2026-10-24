@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createScheduler } from '../vendor/fretfree/engine/scheduler';
 import { useApp } from '../core/app-context';
 import { useSettings } from '../core/settings-store';
+import { useT } from '../core/i18n';
 import { SKILLS, skillById } from '../drills/registry';
 import { dueRetests, nextRetest, restingSkills } from '../core/scheduling/retests';
 import { decodeArms, scheduleFor } from '../core/experiments';
@@ -10,6 +11,7 @@ import styles from '../styles/app.module.css';
 import type { SessionOptions } from './SessionScreen';
 
 export function TodayScreen({ onStart }: { onStart(options: SessionOptions): void }) {
+  const t = useT();
   const app = useApp();
   const settings = useSettings(app.settings);
   const [minutes, setMinutes] = useState(10);
@@ -54,12 +56,12 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
 
   return (
     <div className={styles.card}>
-      <h2>Today</h2>
+      <h2>{t('today.title')}</h2>
       {placed === false && (
         <div className={styles.status} role="region" aria-label="Placement">
           <p>
-            <strong>Start with the placement test</strong> (about six minutes). It sets your
-            baseline, so later retests can show what you have gained.
+            <strong>{t('today.placementTitle')}</strong>
+            {t('today.placementBody')}
           </p>
           <button
             type="button"
@@ -68,7 +70,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
               onStart({ minutes: 6, skillIds: SKILLS.map((s) => s.id), purpose: 'placement' })
             }
           >
-            Take the placement test
+            {t('today.placementButton')}
           </button>
         </div>
       )}
@@ -80,9 +82,11 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
           aria-label="Retest due"
         >
           <p>
-            <strong>Retest due:</strong> {skillById(r.skillId).title},{' '}
-            {r.delay.replace('d', ' days')} after you reached criterion. In keys you have not
-            practised, so it measures what transferred.
+            <strong>{t('today.retestDue')}</strong>{' '}
+            {t('today.retestBody', {
+              skill: skillById(r.skillId).title,
+              days: r.delay.replace('d', ''),
+            })}
           </p>
           <button
             type="button"
@@ -91,31 +95,33 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
               onStart({ minutes: 3, skillIds: [r.skillId], purpose: 'retest', retest: r })
             }
           >
-            Start retest
+            {t('today.startRetest')}
           </button>
         </div>
       ))}
       {settings.weeklyGoal > 0 && (
         <p className={styles.muted} role="status">
-          This week: {thisWeek} of {settings.weeklyGoal} sessions.
+          {t('today.week', { n: thisWeek, goal: settings.weeklyGoal })}
         </p>
       )}
       {lastReflection && (
         <p className={styles.muted}>
-          Last time you wrote: <q>{lastReflection}</q>
+          {t('today.lastWrote')} <q>{lastReflection}</q>
         </p>
       )}
       {dueNow.length === 0 && upcoming && (
         <p className={styles.muted}>
-          Next retest: {skillById(upcoming.skillId).title} on {upcoming.dueAt.toLocaleDateString()}.
+          {t('today.nextRetest', {
+            skill: skillById(upcoming.skillId).title,
+            date: upcoming.dueAt.toLocaleDateString(),
+          })}
         </p>
       )}
       <p className={styles.muted}>
-        Hear the key, play the note. Each session mixes keys and brings back what you missed.
-        {due !== null && due > 0 ? ` ${due} card${due === 1 ? '' : 's'} due.` : ''}
+        {t('today.blurb')} {due !== null && due > 0 ? t('today.due', { n: due }) : ''}
       </p>
       <div className={styles.field}>
-        <span>Length</span>
+        <span>{t('today.length')}</span>
         <div className={styles.row} role="group" aria-label="Session length">
           {[5, 10, 20].map((m) => (
             <button
@@ -125,13 +131,13 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
               aria-pressed={minutes === m}
               onClick={() => setMinutes(m)}
             >
-              {m} min
+              {t('today.min', { n: m })}
             </button>
           ))}
         </div>
       </div>
       <div className={styles.field}>
-        <span>Skills</span>
+        <span>{t('today.skills')}</span>
         <div className={styles.row} role="group" aria-label="Skills">
           {SKILLS.map((sk) => (
             <button
@@ -140,31 +146,19 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
               className={`${styles.button} ${skillIds.includes(sk.id) && !resting.has(sk.id) ? styles.primary : ''}`}
               aria-pressed={skillIds.includes(sk.id) && !resting.has(sk.id)}
               disabled={resting.has(sk.id)}
-              title={
-                resting.has(sk.id)
-                  ? 'Resting until its retest, so the retest measures what stuck'
-                  : undefined
-              }
+              title={resting.has(sk.id) ? t('today.restingHint') : undefined}
               onClick={() => toggleSkill(sk.id)}
             >
               {sk.title}
-              {resting.has(sk.id) ? ' (resting)' : ''}
+              {resting.has(sk.id) ? t('today.resting') : ''}
             </button>
           ))}
         </div>
       </div>
       <p className={styles.muted}>
-        This week's practice is {schedule}
-        {schedule === 'blocked'
-          ? ': one key for the session and skills one after another, the control arm of the interleaving experiment.'
-          : ': keys change every trial and skills are mixed.'}
+        {t(schedule === 'blocked' ? 'today.scheduleBlocked' : 'today.scheduleInterleaved')}
       </p>
-      {!settings.micEnabled && (
-        <p className={styles.muted}>
-          The microphone is off, so you answer by tapping. Turn it on in Settings to answer on your
-          guitar.
-        </p>
-      )}
+      {!settings.micEnabled && <p className={styles.muted}>{t('today.micOff')}</p>}
       <div className={styles.row}>
         <button
           type="button"
@@ -172,7 +166,7 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
           disabled={skillIds.every((id) => resting.has(id))}
           onClick={() => onStart({ minutes, skillIds: skillIds.filter((id) => !resting.has(id)) })}
         >
-          Start session
+          {t('today.start')}
         </button>
       </div>
     </div>

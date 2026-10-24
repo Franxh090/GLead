@@ -9,6 +9,7 @@ import {
   type Tuning,
 } from '../../vendor/fretfree/theory';
 import { displayPc } from '../../vendor/fretfree/theory/pitch-display';
+import { useT } from '../../core/i18n';
 import type { InputEvent } from '../../core/types';
 import styles from '../../styles/app.module.css';
 
@@ -19,12 +20,15 @@ export function ConfirmPanel({
   pending: { heard: string; confidence: number } | null;
   onConfirm(accept: boolean): void;
 }) {
+  const t = useT();
   if (!pending) return null;
   return (
-    <div className={styles.status} role="alertdialog" aria-label="Confirm what you played">
+    <div className={styles.status} role="alertdialog" aria-label={t('drill.confirmTitle')}>
       <p>
-        I heard <strong>{pending.heard}</strong>, but I am only{' '}
-        {Math.round(pending.confidence * 100)}% sure. Is that what you played?
+        {t('drill.confirmBody', {
+          heard: pending.heard,
+          pct: Math.round(pending.confidence * 100),
+        })}
       </p>
       <div className={styles.row}>
         <button
@@ -32,10 +36,10 @@ export function ConfirmPanel({
           className={`${styles.button} ${styles.primary}`}
           onClick={() => onConfirm(true)}
         >
-          Yes, that was it
+          {t('drill.confirmYes')}
         </button>
         <button type="button" className={styles.button} onClick={() => onConfirm(false)}>
-          No, let me play again
+          {t('drill.confirmNo')}
         </button>
       </div>
     </div>
@@ -85,14 +89,15 @@ export function ChoiceGrid({
 }
 
 export function ReplayRow({ listening, onReplay }: { listening: boolean; onReplay(): void }) {
+  const t = useT();
   return (
     <div className={styles.row}>
       <button type="button" className={styles.button} onClick={onReplay}>
-        Hear it again
+        {t('drill.hearAgain')}
       </button>
       {listening && (
         <span className={styles.status} role="status">
-          Listening…
+          {t('drill.listening')}
         </span>
       )}
     </div>

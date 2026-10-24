@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useApp } from '../core/app-context';
 import { decodeArms } from '../core/experiments';
 import { useSettings } from '../core/settings-store';
+import { LANGUAGES, useT } from '../core/i18n';
+import { TUNINGS } from '../vendor/fretfree/theory';
 import styles from '../styles/app.module.css';
 
 function Toggle({
@@ -13,6 +15,7 @@ function Toggle({
   value: boolean;
   onChange(v: boolean): void;
 }) {
+  const t = useT();
   return (
     <div className={styles.field}>
       <span>{label}</span>
@@ -24,13 +27,14 @@ function Toggle({
         className={`${styles.button} ${value ? styles.primary : ''}`}
         onClick={() => onChange(!value)}
       >
-        {value ? 'On' : 'Off'}
+        {value ? t('settings.on') : t('settings.off')}
       </button>
     </div>
   );
 }
 
 export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
+  const t = useT();
   const app = useApp();
   const s = useSettings(app.settings);
   const [micCheck, setMicCheck] = useState<string>('');
@@ -56,20 +60,51 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
 
   return (
     <div className={styles.card}>
-      <h2>Settings</h2>
+      <h2>{t('settings.title')}</h2>
+      <div className={styles.field}>
+        <span>{t('settings.language')}</span>
+        <div className={styles.row} role="group" aria-label={t('settings.language')}>
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              className={`${styles.button} ${s.language === l.id ? styles.primary : ''}`}
+              aria-pressed={s.language === l.id}
+              onClick={() => void app.settings.update({ language: l.id })}
+            >
+              {l.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.field}>
+        <span>{t('settings.tuning')}</span>
+        <select
+          aria-label={t('settings.tuning')}
+          value={s.tuning}
+          onChange={(e) => void app.settings.update({ tuning: e.target.value })}
+          className={styles.button}
+        >
+          {TUNINGS.map((tu) => (
+            <option key={tu.id} value={tu.id}>
+              {tu.name}
+            </option>
+          ))}
+        </select>
+      </div>
       <Toggle
-        label="Answer on the guitar (microphone)"
+        label={t('settings.mic')}
         value={s.micEnabled}
         onChange={(v) => void app.settings.update({ micEnabled: v })}
       />
       {s.micEnabled && (
         <div className={styles.row}>
           <button type="button" className={styles.button} onClick={() => void testMic()}>
-            Test the microphone
+            {t('settings.testMic')}
           </button>
           {onMicLab && (
             <button type="button" className={styles.button} onClick={onMicLab}>
-              Run the Mic lab (five minutes)
+              {t('settings.micLab')}
             </button>
           )}
           {micCheck && <span className={styles.muted}>{micCheck}</span>}
@@ -90,12 +125,12 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         />
       </div>
       <Toggle
-        label="Imagine first: a silent beat before you play"
+        label={t('settings.imagine')}
         value={s.imagineFirst}
         onChange={(v) => void app.settings.update({ imagineFirst: v })}
       />
       <div className={styles.field}>
-        <span>Degree labels</span>
+        <span>{t('settings.labels')}</span>
         <div className={styles.row} role="group" aria-label="Degree labels">
           {(['numbers', 'moveable-do'] as const).map((l) => (
             <button
@@ -111,7 +146,7 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         </div>
       </div>
       <div className={styles.field}>
-        <span>Neck</span>
+        <span>{t('settings.neck')}</span>
         <div className={styles.row} role="group" aria-label="Handedness">
           {(['right', 'left'] as const).map((h) => (
             <button
@@ -127,7 +162,7 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         </div>
       </div>
       <div className={styles.field}>
-        <span>Accidentals</span>
+        <span>{t('settings.accidentals')}</span>
         <div className={styles.row} role="group" aria-label="Accidentals">
           {(['sharp', 'flat'] as const).map((a) => (
             <button
@@ -143,7 +178,7 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         </div>
       </div>
       <Toggle
-        label="Sound"
+        label={t('settings.sound')}
         value={s.soundOn}
         onChange={(v) => void app.settings.update({ soundOn: v })}
       />
@@ -171,7 +206,7 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         })()}{' '}
         Progress compares the arms.
       </p>
-      <h3>Your data</h3>
+      <h3>{t('settings.data')}</h3>
       <p className={styles.muted}>
         Everything stays on this device: results and settings only, never audio. Export it from
         Progress.

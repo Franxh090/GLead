@@ -21,40 +21,40 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprints 0–6 of the plan in `docs/implementation-plan.md` are built, apart
-from the parts only people can do: the four-week pilot, the teacher
-interviews and the device measurement (R2), for which the app now carries its
-own harness. What works today:
+Sprints 0–7 of the plan in `docs/implementation-plan.md` are built, apart from
+the parts only people can do: the four-week pilot, the teacher interviews and
+the device measurement (R2), for which the app carries its own Mic lab. What
+works today:
 
-- **Five ear-to-hand drills** (B1 scale degree, B2 chord function, B3 note
-  against chord, B4 melodies by ear, B5 spot the error), answered on the
-  guitar through the microphone or by tapping, with feedback on the neck, a
-  confirm prompt when the detector is unsure, misses that come back, and FSRS
-  scheduling per item.
+- **Six ear drills**: B1 scale degree, B2 chord function, B3 note against
+  chord, B4 melodies by ear and B5 spot the error, each answered on the guitar
+  through the microphone or by tapping; and B8 intervals by ear with song
+  hints. Feedback on the neck, a confirm prompt when the detector is unsure,
+  misses that come back, FSRS scheduling per item.
 - **Sessions with a shape**: the goal up front, reviews first, then new
   material, then a scored play-along over a loop (**Changes**) whose targets
   hide once two takes land 80%.
 - **Keys**: any key's scale and chords on the neck with sound on every tap,
-  each chord in three CAGED zones, the key's circle neighbours, a capo helper
-  and six "why it works" cards you hear before you read (A1, A2, A4).
-  **Loops** serves the PRD progressions in any key.
+  each chord in three CAGED zones, circle neighbours, a capo helper, six "why
+  it works" cards heard before read, and **Find my key**: play a phrase and
+  see which keys fit it. **Loops** serves the PRD progressions in any key.
+- **English and Spanish**, chosen from the browser on first run and switchable
+  in Settings; **standard and drop D tuning** on every neck and in every drill.
 - **Measuring**: a placement test; retests at 1, 7 and 30 days in unseen keys
   with the skill resting until its retest; experiment arms per learner
   (imagine-first and feedback variant per trial, label scheme per learner,
   interleaved and blocked weeks), all on every trial; a weekly goal that only
-  counts.
-- **Mic lab** (Settings): the R2 protocol in five minutes: 24 notes across the
-  neck, 8 deliberate wrong notes, 12 clicks for latency; accept rates, confirm
-  share, median latency and a suggested confirm threshold, saved and exported.
+  counts; the **Mic lab** (R2 in five minutes, with a suggested confirm
+  threshold).
 - **Progress** leads with delayed retests, transfer and the chord-tone hit
   rate, then a per-skill report and the experiment arms, and loads another
   learner's export read-only. `research/R5-measurement.md`,
   `docs/pilot-kit.md` and `docs/teacher-interview-guide.md` carry the pilot.
-- 677 unit tests and 23 Playwright specs (`pnpm e2e`) pass.
+- 686 unit tests and 27 Playwright specs (`pnpm e2e`) pass.
 
-Not yet: Spanish and alternate tunings (D7), interval drills with song hints
-and key-finding from a played snippet (B8), call and response (C4), chord
-detection.
+Not yet: more tunings than FretFree's two, call and response (C4), chord
+detection, real-song clips, sync. The Mic lab's text, the why-it-works cards
+and the Progress tables are still English only.
 
 ## Run it locally
 

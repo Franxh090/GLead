@@ -12,7 +12,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `pnpm preview`,
+    // Vite directly, not through pnpm: Playwright kills the process it spawned,
+    // and a pnpm wrapper would leave Vite running and the teardown waiting.
+    command: `node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

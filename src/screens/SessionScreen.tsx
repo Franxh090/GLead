@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createScheduler } from '../vendor/fretfree/engine/scheduler';
-import { STANDARD_TUNING, keyName, type MusicalKey } from '../vendor/fretfree/theory';
+import { getTuning, keyName, type MusicalKey } from '../vendor/fretfree/theory';
+import { useT } from '../core/i18n';
 import { playScript, stopScript } from '../audio/player';
 import { useApp } from '../core/app-context';
 import { newId } from '../core/events/ids';
@@ -58,6 +59,7 @@ export function SessionScreen({
   /** Hand over to the Changes screen for the session's play-along. */
   onPlayAlong?(preset: PlayAlongPreset): void;
 }) {
+  const t = useT();
   const app = useApp();
   const settings = useSettings(app.settings);
   const [runner, setRunner] = useState<SessionRunner | null>(null);
@@ -138,7 +140,7 @@ export function SessionScreen({
         now: () => new Date(),
         clock: () => performance.now(),
         rng: Math.random,
-        tuning: STANDARD_TUNING,
+        tuning: getTuning(app.settings.get().tuning),
         purpose,
         retest: options.retest?.delay ?? 'none',
         schedule,
@@ -215,17 +217,14 @@ export function SessionScreen({
     return () => clearTimeout(t);
   }, [runner, state?.phase, state?.feedback, state?.index]);
 
-  if (!runner || !state) return <p className={styles.muted}>Preparing your session…</p>;
+  if (!runner || !state) return <p className={styles.muted}>{t('session.preparing')}</p>;
 
   if (shape && !goalSeen) {
     return (
       <div className={styles.card} role="region" aria-label="Session goal">
-        <h2>This session</h2>
+        <h2>{t('session.goalTitle')}</h2>
         <p>{shape.goal}</p>
-        <p className={styles.muted}>
-          Reviews first, because retrieval before new material warms the ear; then one new thing;
-          then music. Keys change every trial on purpose: it feels harder and holds better.
-        </p>
+        <p className={styles.muted}>{t('session.goalWhy')}</p>
         <div className={styles.row}>
           <button
             type="button"
@@ -235,7 +234,7 @@ export function SessionScreen({
               void runner.start();
             }}
           >
-            Begin
+            {t('session.begin')}
           </button>
         </div>
       </div>
@@ -263,25 +262,22 @@ export function SessionScreen({
       <div className={styles.card}>
         <h2>
           {(options.purpose ?? 'practice') === 'placement'
-            ? 'Placement done'
+            ? t('session.placementDone')
             : options.purpose === 'retest'
-              ? `Retest done (${options.retest?.delay ?? ''})`
-              : 'Session done'}
+              ? t('session.retestDone', { delay: options.retest?.delay ?? '' })
+              : t('session.done')}
         </h2>
         <p>
           <span className={styles.big}>{acc === null ? '—' : `${acc}%`}</span>{' '}
-          <span className={styles.muted}>
-            over {state.trials} trials. Today's score is the least telling number: what counts is
-            the retest in a week, in a key you have not practised.
-          </span>
+          <span className={styles.muted}>{t('session.summary', { n: state.trials })}</span>
         </p>
         {Object.keys(state.byKey).length > 0 && (
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Key</th>
-                <th>Trials</th>
-                <th>Right</th>
+                <th>{t('session.key')}</th>
+                <th>{t('session.trials')}</th>
+                <th>{t('session.rightCol')}</th>
               </tr>
             </thead>
             <tbody>
@@ -296,9 +292,7 @@ export function SessionScreen({
           </table>
         )}
         <label>
-          <span className={styles.muted}>
-            Thirty seconds: what was hard, and what will you try next time?
-          </span>
+          <span className={styles.muted}>{t('session.reflect')}</span>
           <textarea
             className={styles.textarea}
             value={reflection}
@@ -314,7 +308,7 @@ export function SessionScreen({
             className={`${styles.button} ${styles.primary}`}
             onClick={() => void saveReflection().then(onExit)}
           >
-            Save and finish
+            {t('session.save')}
           </button>
           {shape?.playAlong && onPlayAlong && (
             <button
@@ -326,7 +320,7 @@ export function SessionScreen({
                 )
               }
             >
-              Save, then {shape.playAlong.minutes} minutes over a loop
+              {t('session.savePlay', { n: shape.playAlong.minutes })}
             </button>
           )}
         </div>
@@ -342,22 +336,22 @@ export function SessionScreen({
     <div className={styles.card}>
       <div className={styles.row}>
         <span className={styles.muted}>
-          Trial {state.index + 1} of {state.total}
+          {t('session.trial', { n: state.index + 1, total: state.total })}
           {state.key ? ` · ${keyName(state.key)}` : ''}
         </span>
         <span style={{ marginLeft: 'auto' }} />
         {settings.micEnabled && micState !== 'running' && (
           <button type="button" className={`${styles.button} ${styles.primary}`} onClick={startMic}>
-            {micState === 'error' ? 'Retry microphone' : 'Start listening'}
+            {micState === 'error' ? t('session.retryMic') : t('session.startListening')}
           </button>
         )}
         {settings.micEnabled && micState === 'running' && (
           <span className={styles.status} role="status">
-            Mic on
+            {t('session.micOn')}
           </span>
         )}
         <button type="button" className={styles.button} onClick={() => runner.finish()}>
-          End session
+          {t('session.end')}
         </button>
       </div>
       <p className={styles.muted}>{drill.rationale}</p>
@@ -366,7 +360,7 @@ export function SessionScreen({
         feedback={fb}
         guideLevel={settings.guideLevel}
         handedness={settings.handedness}
-        tuning={STANDARD_TUNING}
+        tuning={getTuning(settings.tuning)}
         onTap={onTap}
         listening={state.phase === 'listening'}
         pending={
@@ -381,10 +375,10 @@ export function SessionScreen({
       {fb && (
         <div className={styles.status} role="status">
           {fb.check.correct ? (
-            <span className={styles.ok}>Right: {fb.check.expected}.</span>
+            <span className={styles.ok}>{t('session.right', { expected: fb.check.expected })}</span>
           ) : (
             <span className={styles.bad}>
-              That was {fb.check.expected}. You gave {fb.check.given}.
+              {t('session.wrong', { expected: fb.check.expected, given: fb.check.given })}
             </span>
           )}
           {!fb.check.correct && (
@@ -394,7 +388,7 @@ export function SessionScreen({
               style={{ marginLeft: '1rem' }}
               onClick={() => void runner.advance()}
             >
-              Next
+              {t('session.next')}
             </button>
           )}
         </div>

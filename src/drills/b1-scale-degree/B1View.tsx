@@ -1,16 +1,11 @@
 import { DEGREES } from '../../core/keys';
+import { useT } from '../../core/i18n';
 import type { DrillRenderProps } from '../../core/types';
 import { displayPc } from '../../vendor/fretfree/theory/pitch-display';
+import { keyName } from '../../vendor/fretfree/theory';
 import styles from '../../styles/app.module.css';
 import { AnswerNeck, ChoiceGrid, ConfirmPanel, ReplayRow, feedbackMarkers } from '../shared/parts';
-import {
-  B1_REGION,
-  b1FeedbackPositions,
-  b1Label,
-  b1Question,
-  type B1Answer,
-  type B1Prompt,
-} from './logic';
+import { B1_REGION, b1FeedbackPositions, b1Label, type B1Answer, type B1Prompt } from './logic';
 
 /**
  * B1's view: the question, the degree buttons as the tap fallback, the neck
@@ -29,6 +24,7 @@ export function B1View({
   onConfirm,
   onReplay,
 }: DrillRenderProps<B1Prompt, B1Answer>) {
+  const t = useT();
   const canAnswer = listening && !feedback;
   const markers = feedbackMarkers(
     feedback ? b1FeedbackPositions(prompt, feedback) : null,
@@ -39,11 +35,11 @@ export function B1View({
   );
   return (
     <div className={styles.card} data-target-midi={prompt.targetMidi}>
-      <p>{b1Question(prompt)}</p>
+      <p>{t('b1.question', { key: keyName(prompt.key) })}</p>
       <ReplayRow listening={canAnswer} onReplay={onReplay} />
       <ConfirmPanel pending={pending} onConfirm={onConfirm} />
       <ChoiceGrid
-        label="Scale degree"
+        label={t('b1.group')}
         choices={DEGREES.map((d) => ({ id: String(d), label: b1Label(prompt, d) }))}
         disabled={!canAnswer}
         onChoose={(id) =>
