@@ -272,24 +272,26 @@ export function SessionScreen({
           <span className={styles.muted}>{t('session.summary', { n: state.trials })}</span>
         </p>
         {Object.keys(state.byKey).length > 0 && (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>{t('session.key')}</th>
-                <th>{t('session.trials')}</th>
-                <th>{t('session.rightCol')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(state.byKey).map(([k, t]) => (
-                <tr key={k}>
-                  <td>{k}</td>
-                  <td>{t.trials}</td>
-                  <td>{t.correct}</td>
+          <div className={styles.scroll}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>{t('session.key')}</th>
+                  <th>{t('session.trials')}</th>
+                  <th>{t('session.rightCol')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {Object.entries(state.byKey).map(([k, t]) => (
+                  <tr key={k}>
+                    <td>{k}</td>
+                    <td>{t.trials}</td>
+                    <td>{t.correct}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <label>
           <span className={styles.muted}>{t('session.reflect')}</span>

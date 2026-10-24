@@ -96,35 +96,37 @@ export function ProgressScreen() {
         </div>
       )}
       <p className={styles.muted}>{t('progress.blurb')}</p>
-      <table className={styles.table}>
-        <tbody>
-          <tr>
-            <th>Retest after 1 day</th>
-            <td>{percent(accuracyOf(d['1d']))}</td>
-            <td className={styles.muted}>{d['1d'].trials} trials</td>
-          </tr>
-          <tr>
-            <th>Retest after 7 days</th>
-            <td>{percent(accuracyOf(d['7d']))}</td>
-            <td className={styles.muted}>{d['7d'].trials} trials</td>
-          </tr>
-          <tr>
-            <th>Retest after 30 days</th>
-            <td>{percent(accuracyOf(d['30d']))}</td>
-            <td className={styles.muted}>{d['30d'].trials} trials</td>
-          </tr>
-          <tr>
-            <th>Unseen keys (transfer)</th>
-            <td>{percent(accuracyOf(tr))}</td>
-            <td className={styles.muted}>{tr.trials} trials</td>
-          </tr>
-          <tr>
-            <th>Chord-tone hit rate (Changes)</th>
-            <td>{percent(accuracyOf(hits))}</td>
-            <td className={styles.muted}>{hits.trials} changes</td>
-          </tr>
-        </tbody>
-      </table>
+      <div className={styles.scroll}>
+        <table className={styles.table}>
+          <tbody>
+            <tr>
+              <th>Retest after 1 day</th>
+              <td>{percent(accuracyOf(d['1d']))}</td>
+              <td className={styles.muted}>{d['1d'].trials} trials</td>
+            </tr>
+            <tr>
+              <th>Retest after 7 days</th>
+              <td>{percent(accuracyOf(d['7d']))}</td>
+              <td className={styles.muted}>{d['7d'].trials} trials</td>
+            </tr>
+            <tr>
+              <th>Retest after 30 days</th>
+              <td>{percent(accuracyOf(d['30d']))}</td>
+              <td className={styles.muted}>{d['30d'].trials} trials</td>
+            </tr>
+            <tr>
+              <th>Unseen keys (transfer)</th>
+              <td>{percent(accuracyOf(tr))}</td>
+              <td className={styles.muted}>{tr.trials} trials</td>
+            </tr>
+            <tr>
+              <th>Chord-tone hit rate (Changes)</th>
+              <td>{percent(accuracyOf(hits))}</td>
+              <td className={styles.muted}>{hits.trials} changes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p className={styles.muted}>
         Retests are scheduled when a skill first reaches 90% over 20 trials; they appear on Today
         when due.
@@ -132,25 +134,27 @@ export function ProgressScreen() {
       {Object.keys(baseline).length > 0 && (
         <>
           <h3>Placement baseline</h3>
-          <table className={styles.table}>
-            <tbody>
-              {Object.entries(baseline).map(([k, t]) => (
-                <tr key={k}>
-                  <th>
-                    {(() => {
-                      try {
-                        return skillById(k).title;
-                      } catch {
-                        return k;
-                      }
-                    })()}
-                  </th>
-                  <td>{percent(accuracyOf(t))}</td>
-                  <td className={styles.muted}>{t.trials} trials</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className={styles.scroll}>
+            <table className={styles.table}>
+              <tbody>
+                {Object.entries(baseline).map(([k, t]) => (
+                  <tr key={k}>
+                    <th>
+                      {(() => {
+                        try {
+                          return skillById(k).title;
+                        } catch {
+                          return k;
+                        }
+                      })()}
+                    </th>
+                    <td>{percent(accuracyOf(t))}</td>
+                    <td className={styles.muted}>{t.trials} trials</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
       {reports.length > 0 && (
@@ -205,21 +209,23 @@ export function ProgressScreen() {
         Each trial was dealt its conditions at random, so these compare like with like. One learner
         is not a study: treat a gap as a hint, not a finding.
       </p>
-      <table className={styles.table} aria-label="Experiments">
-        <tbody>
-          {experiments.map((e) => (
-            <tr key={e.question}>
-              <th>{e.question}</th>
-              {e.arms.map((a) => (
-                <td key={a.label}>
-                  {a.label}: {percent(accuracyOf(a.tally))}{' '}
-                  <span className={styles.muted}>({a.tally.trials})</span>
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className={styles.scroll}>
+        <table className={styles.table} aria-label="Experiments">
+          <tbody>
+            {experiments.map((e) => (
+              <tr key={e.question}>
+                <th>{e.question}</th>
+                {e.arms.map((a) => (
+                  <td key={a.label}>
+                    {a.label}: {percent(accuracyOf(a.tally))}{' '}
+                    <span className={styles.muted}>({a.tally.trials})</span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <h3>In session</h3>
       <p>
         <span className={styles.big}>{percent(accuracyOf(all))}</span>{' '}
@@ -232,46 +238,50 @@ export function ProgressScreen() {
         )}
       </p>
       {Object.keys(byDegree).length > 0 && (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Degree</th>
-              <th>Accuracy</th>
-              <th>Trials</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(byDegree)
-              .sort()
-              .map(([k, t]) => (
+        <div className={styles.scroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Degree</th>
+                <th>Accuracy</th>
+                <th>Trials</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(byDegree)
+                .sort()
+                .map(([k, t]) => (
+                  <tr key={k}>
+                    <td>{k}</td>
+                    <td>{percent(accuracyOf(t))}</td>
+                    <td>{t.trials}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {Object.keys(byKey).length > 0 && (
+        <div className={styles.scroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Accuracy</th>
+                <th>Trials</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(byKey).map(([k, t]) => (
                 <tr key={k}>
                   <td>{k}</td>
                   <td>{percent(accuracyOf(t))}</td>
                   <td>{t.trials}</td>
                 </tr>
               ))}
-          </tbody>
-        </table>
-      )}
-      {Object.keys(byKey).length > 0 && (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Accuracy</th>
-              <th>Trials</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(byKey).map(([k, t]) => (
-              <tr key={k}>
-                <td>{k}</td>
-                <td>{percent(accuracyOf(t))}</td>
-                <td>{t.trials}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       )}
       <div className={styles.row}>
         <button

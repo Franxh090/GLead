@@ -139,12 +139,34 @@
   font: inherit;
 }
 
-.neck {
+.neck,
+.scroll {
   overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  min-width: 100%;
 }
 
 @media (max-width: 600px) {
   .choices {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+  .shell {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+  .field {
+    flex-wrap: wrap;
+  }
+  .brand {
+    width: 100%;
+  }
+  .table th,
+  .table td {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.9rem;
   }
 }

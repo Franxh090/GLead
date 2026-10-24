@@ -21,7 +21,22 @@ export default defineConfig({
   },
   projects: [
     {
+      // iPhone 15 viewport and touch, in Chromium (WebKit is not installed here).
+      name: 'iphone-chromium',
+      testMatch: /iphone\.spec\.ts/,
+      use: {
+        ...devices['iPhone 15'],
+        browserName: 'chromium',
+        launchOptions: {
+          executablePath:
+            process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+          args: ['--autoplay-policy=no-user-gesture-required'],
+        },
+      },
+    },
+    {
       name: 'desktop-chromium',
+      testIgnore: /iphone\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         // The container ships Chromium at this path; a project pinning another

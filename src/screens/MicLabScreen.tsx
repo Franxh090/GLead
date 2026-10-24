@@ -251,67 +251,73 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
       {phase === 'done' && (
         <>
           <h3>Results</h3>
-          <table className={styles.table} aria-label="Mic lab results">
-            <tbody>
-              <tr>
-                <th>Correct plays accepted (any octave)</th>
-                <td>{pct(summary.correctAccepted)}</td>
-              </tr>
-              <tr>
-                <th>Correct plays heard at the exact pitch</th>
-                <td>{pct(summary.correctExact)}</td>
-              </tr>
-              <tr>
-                <th>
-                  Correct plays that would need confirming (threshold {settings.confirmBelow})
-                </th>
-                <td>{pct(summary.confirmShare)}</td>
-              </tr>
-              <tr>
-                <th>Wrong plays accepted as the named note</th>
-                <td>{pct(summary.wrongAccepted)}</td>
-              </tr>
-              <tr>
-                <th>Prompts with nothing heard</th>
-                <td>{summary.silent}</td>
-              </tr>
-              <tr>
-                <th>Latency, click to stable note (median, spread)</th>
-                <td>
-                  {summary.medianLatencyMs === null
-                    ? '—'
-                    : `${Math.round(summary.medianLatencyMs)} ms`}
-                  {summary.latencySpreadMs === null
-                    ? ''
-                    : ` ± ${Math.round(summary.latencySpreadMs / 2)}`}
-                </td>
-              </tr>
-              <tr>
-                <th>Suggested confirm threshold (nine in ten correct plays pass)</th>
-                <td>{summary.suggestedConfirmBelow ?? '—'}</td>
-              </tr>
-            </tbody>
-          </table>
-          <details>
-            <summary>Every note</summary>
-            <table className={styles.table}>
+          <div className={styles.scroll}>
+            <table className={styles.table} aria-label="Mic lab results">
               <tbody>
-                {records.map((r, i) => (
-                  <tr key={i}>
-                    <td>{r.part}</td>
-                    <td>{r.expectedMidi ? displayPc(midiToFretNote(r.expectedMidi).name) : '—'}</td>
-                    <td>
-                      {r.heardMidi === null
-                        ? 'nothing'
-                        : displayPc(midiToFretNote(r.heardMidi).name)}
-                    </td>
-                    <td>{r.cents === null ? '' : `${Math.round(r.cents)} c`}</td>
-                    <td>{r.confidence === null ? '' : pct(r.confidence)}</td>
-                    <td>{r.ms === null ? '' : `${r.ms} ms`}</td>
-                  </tr>
-                ))}
+                <tr>
+                  <th>Correct plays accepted (any octave)</th>
+                  <td>{pct(summary.correctAccepted)}</td>
+                </tr>
+                <tr>
+                  <th>Correct plays heard at the exact pitch</th>
+                  <td>{pct(summary.correctExact)}</td>
+                </tr>
+                <tr>
+                  <th>
+                    Correct plays that would need confirming (threshold {settings.confirmBelow})
+                  </th>
+                  <td>{pct(summary.confirmShare)}</td>
+                </tr>
+                <tr>
+                  <th>Wrong plays accepted as the named note</th>
+                  <td>{pct(summary.wrongAccepted)}</td>
+                </tr>
+                <tr>
+                  <th>Prompts with nothing heard</th>
+                  <td>{summary.silent}</td>
+                </tr>
+                <tr>
+                  <th>Latency, click to stable note (median, spread)</th>
+                  <td>
+                    {summary.medianLatencyMs === null
+                      ? '—'
+                      : `${Math.round(summary.medianLatencyMs)} ms`}
+                    {summary.latencySpreadMs === null
+                      ? ''
+                      : ` ± ${Math.round(summary.latencySpreadMs / 2)}`}
+                  </td>
+                </tr>
+                <tr>
+                  <th>Suggested confirm threshold (nine in ten correct plays pass)</th>
+                  <td>{summary.suggestedConfirmBelow ?? '—'}</td>
+                </tr>
               </tbody>
             </table>
+          </div>
+          <details>
+            <summary>Every note</summary>
+            <div className={styles.scroll}>
+              <table className={styles.table}>
+                <tbody>
+                  {records.map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.part}</td>
+                      <td>
+                        {r.expectedMidi ? displayPc(midiToFretNote(r.expectedMidi).name) : '—'}
+                      </td>
+                      <td>
+                        {r.heardMidi === null
+                          ? 'nothing'
+                          : displayPc(midiToFretNote(r.heardMidi).name)}
+                      </td>
+                      <td>{r.cents === null ? '' : `${Math.round(r.cents)} c`}</td>
+                      <td>{r.confidence === null ? '' : pct(r.confidence)}</td>
+                      <td>{r.ms === null ? '' : `${r.ms} ms`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </details>
           <div className={styles.row}>
             <button

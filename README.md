@@ -56,6 +56,26 @@ Not yet: more tunings than FretFree's two, call and response (C4), chord
 detection, real-song clips, sync. The Mic lab's text, the why-it-works cards
 and the Progress tables are still English only.
 
+## Install it on an iPhone
+
+The app is published to GitHub Pages from `main` by `.github/workflows/pages.yml`
+(the repository's Pages source must be set to **GitHub Actions** once, under
+Settings → Pages). It then lives at `https://franxh090.github.io/GLead/`.
+
+1. Open that address in **Safari** on the iPhone (not from inside another app's
+   browser).
+2. Tap **Share → Add to Home Screen**. GLead opens full-screen from its icon and
+   works offline from then on.
+3. In the app: **Settings → Answer on the guitar (microphone): On**, then **Run
+   the Mic lab** with your guitar. Safari asks for the microphone once; allow it.
+   The lab suggests a confirm threshold measured on your phone.
+4. Use headphones, or keep the volume low: the phone's speaker playing the
+   cadence can be heard by its own microphone.
+
+Other hosts work too: point Netlify or Cloudflare Pages at the repo with the
+build command `pnpm build` and the output folder `dist`; at a root domain no
+base path is needed.
+
 ## Run it locally
 
 Node 22+ and pnpm.
@@ -68,7 +88,9 @@ pnpm e2e        # Playwright, against a production build
 ```
 
 Mic drills need HTTPS or `localhost` (browsers only grant the microphone in a
-secure context) and a real guitar.
+secure context) and a real guitar. To test on a phone from a laptop, use
+`pnpm dev --host` and open the network address; the mic needs HTTPS, so for
+the mic on a phone use the published site.
 
 ## Built on
 

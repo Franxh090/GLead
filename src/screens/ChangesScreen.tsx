@@ -439,38 +439,40 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             {isUnseenKey(key) ? ' (an unseen key: this counts as transfer)' : ''} ·{' '}
             {RUNGS.find((r) => r.id === rung)?.title}
           </p>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Change</th>
-                <th>Chord</th>
-                <th>Wanted</th>
-                <th>Played</th>
-                <th>Timing</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((r) => (
-                <tr key={r.bar}>
-                  <td>{r.bar}</td>
-                  <td>{displayPc(r.chord)}</td>
-                  <td>{r.wanted.map((t) => TONE_NAMES[t]).join(' / ')}</td>
-                  <td className={r.outcome === 'hit' ? styles.ok : styles.bad}>
-                    {r.outcome === 'silent'
-                      ? 'nothing'
-                      : r.tone
-                        ? TONE_NAMES[r.tone as ChordTone]
-                        : 'not a chord tone'}
-                  </td>
-                  <td className={styles.muted}>
-                    {r.offsetMs === null
-                      ? '—'
-                      : `${r.offsetMs > 0 ? '+' : ''}${Math.round(r.offsetMs)} ms`}
-                  </td>
+          <div className={styles.scroll}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Change</th>
+                  <th>Chord</th>
+                  <th>Wanted</th>
+                  <th>Played</th>
+                  <th>Timing</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {records.map((r) => (
+                  <tr key={r.bar}>
+                    <td>{r.bar}</td>
+                    <td>{displayPc(r.chord)}</td>
+                    <td>{r.wanted.map((t) => TONE_NAMES[t]).join(' / ')}</td>
+                    <td className={r.outcome === 'hit' ? styles.ok : styles.bad}>
+                      {r.outcome === 'silent'
+                        ? 'nothing'
+                        : r.tone
+                          ? TONE_NAMES[r.tone as ChordTone]
+                          : 'not a chord tone'}
+                    </td>
+                    <td className={styles.muted}>
+                      {r.offsetMs === null
+                        ? '—'
+                        : `${r.offsetMs > 0 ? '+' : ''}${Math.round(r.offsetMs)} ms`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

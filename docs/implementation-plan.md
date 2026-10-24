@@ -58,3 +58,7 @@ Definition of done per sprint: `pnpm verify` green; the sprint's drill playable 
 ## 5. P1 backlog and carried-over questions
 
 A4, B8, C4, D7 (Spanish, alternate tunings), chord detection, real-song clips, sync. Open from the PRD: moveable-do vs numbers as default (Sprint 1 randomises per learner so the pilot answers it); first pilot group; the FretFree upstream conversation (R1 §7).
+
+## 6. iPhone first (added 2026-10-24)
+
+The pilot runs on phones, so the build targets the iPhone before anything else: GitHub Pages deployment from `main` (base path `/GLead/`), installable from Safari with its own icons, a Playwright project at iPhone 15 width that fails on any horizontal overflow and runs a session, tables that scroll inside their box, and every microphone start inside the tap that asks for it (iOS grants it nowhere else). WebKit is not installed in the build environment, so the phone pass runs in Chromium at phone size; the first real-Safari run is still Frank's.

@@ -69,7 +69,6 @@ export function KeysScreen() {
   useEffect(() => {
     if (!micOn) return;
     const mic = app.mic();
-    void mic.start().catch(() => undefined);
     return mic.onEvent((e: InputEvent) => {
       if (e.midi !== undefined) setPhrase((ph) => (ph ? [...ph, e.midi as number] : ph));
     });
@@ -156,33 +155,35 @@ export function KeysScreen() {
           </button>
         </div>
       </div>
-      <table className={styles.table} aria-label="Diatonic chords">
-        <thead>
-          <tr>
-            <th>Numeral</th>
-            <th>Chord</th>
-            <th>Job</th>
-          </tr>
-        </thead>
-        <tbody>
-          {chords.map((c, i) => (
-            <tr key={c.roman} aria-selected={chordIndex === i}>
-              <td>
-                <button
-                  type="button"
-                  className={`${styles.button} ${chordIndex === i ? styles.primary : ''}`}
-                  aria-pressed={chordIndex === i}
-                  onClick={() => strum(c, i)}
-                >
-                  {c.roman}
-                </button>
-              </td>
-              <td>{displayPc(c.symbol)}</td>
-              <td className={styles.muted}>{functionOf(key, c)}</td>
+      <div className={styles.scroll}>
+        <table className={styles.table} aria-label="Diatonic chords">
+          <thead>
+            <tr>
+              <th>Numeral</th>
+              <th>Chord</th>
+              <th>Job</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {chords.map((c, i) => (
+              <tr key={c.roman} aria-selected={chordIndex === i}>
+                <td>
+                  <button
+                    type="button"
+                    className={`${styles.button} ${chordIndex === i ? styles.primary : ''}`}
+                    aria-pressed={chordIndex === i}
+                    onClick={() => strum(c, i)}
+                  >
+                    {c.roman}
+                  </button>
+                </td>
+                <td>{displayPc(c.symbol)}</td>
+                <td className={styles.muted}>{functionOf(key, c)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className={styles.row}>
         <span className={styles.muted}>
           {chord
@@ -267,6 +268,11 @@ export function KeysScreen() {
               className={styles.button}
               disabled={!settings.micEnabled}
               onClick={() => {
+                // iOS grants the microphone only inside the tap.
+                void app
+                  .mic()
+                  .start()
+                  .catch(() => undefined);
                 setPhrase([]);
                 setFinding(null);
               }}
