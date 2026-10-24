@@ -1,6 +1,6 @@
 # GLead handoff
 
-**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprint 8. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Sprints 0–7 are on `main` at `github.com/Franxh090/GLead`; Sprint 8 is on the branch `claude/wizardly-fermi-6t4qbo`, ready to merge (Pages deploys from `main` only, so the site shows Sprint 8 once it is merged).
+**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprint 8. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 8 is on `main` at `github.com/Franxh090/GLead`; nothing is uncommitted.
 
 ## 1. Where things stand
 
@@ -10,7 +10,7 @@
 
 ## 2. The next things Frank must do
 
-Merge the Sprint 8 branch into `main` (the deploy follows by itself). On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
+On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
 
 If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnpm build` and output `dist`, with no base path at a root domain (`GLEAD_BASE` unset).
 
@@ -52,7 +52,7 @@ See `CLAUDE.md` §Layout. The pure cores to read first: `src/core/session/runner
 
 ## 7. Candidate next steps, in the order I would take them
 
-1. Merge Sprint 8, then do the Mic lab on the iPhone (Frank). Fix whatever iOS Safari shows; nothing has run on a real device yet. The C4 response panel and the new tunings have only run in Chromium.
+1. Do the Mic lab on the iPhone (Frank). Fix whatever iOS Safari shows; nothing has run on a real device yet. The C4 response panel and the new tunings have only run in Chromium.
 2. Interleaved-vs-blocked results will take weeks; nothing to build there yet.
 3. After the pilot: fixes from exports and interviews, then levels 4–6 of the curriculum (ii–V–I and 7ths are partly there in B2/B3; passing notes and phrase building are not). C4's in-key share on Progress is the first number for phrase building.
 4. Chord detection (P1) is the one PRD item left; it needs a polyphonic detector, which pitchy is not.
