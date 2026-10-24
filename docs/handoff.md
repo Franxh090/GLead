@@ -1,6 +1,6 @@
 # GLead handoff
 
-**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprints 8 and 9. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 8 is on `main` at `github.com/Franxh090/GLead`; Sprint 9 is on the branch `claude/wizardly-fermi-6t4qbo`, ready to merge.
+**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprints 8 and 9. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 9 is on `main` at `github.com/Franxh090/GLead`; nothing is uncommitted.
 
 ## 1. Where things stand
 
@@ -10,7 +10,7 @@
 
 ## 2. The next things Frank must do
 
-Merge Sprint 9 into `main` (the deploy follows by itself). On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
+On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
 
 If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnpm build` and output `dist`, with no base path at a root domain (`GLEAD_BASE` unset).
 
