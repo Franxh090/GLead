@@ -15,6 +15,7 @@ import {
   responseInKeyRate,
   stepApproachRate,
   skillReport,
+  songPhraseRate,
   tallyAll,
   tallyBy,
   transfer,
@@ -96,6 +97,7 @@ export function ProgressScreen() {
   const responses = responseInKeyRate(trials);
   const steps = stepApproachRate(trials);
   const passing = passingNotes(trials);
+  const songs = songPhraseRate(trials);
   const baseline = placementBaseline(trials);
   const reports = SKILLS.filter((sk) => trials.some((t) => t.skillId === sk.id)).map((sk) =>
     skillReport(trials, sk.id),
@@ -163,6 +165,11 @@ export function ProgressScreen() {
               <th>{t('progress.passing')}</th>
               <td>{percent(accuracyOf(passing))}</td>
               <td className={styles.muted}>{t('progress.nNotes', { n: passing.trials })}</td>
+            </tr>
+            <tr>
+              <th>{t('progress.songs')}</th>
+              <td>{percent(accuracyOf(songs))}</td>
+              <td className={styles.muted}>{t('progress.nTrials', { n: songs.trials })}</td>
             </tr>
           </tbody>
         </table>

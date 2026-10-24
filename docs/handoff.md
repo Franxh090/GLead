@@ -1,16 +1,16 @@
 # GLead handoff
 
-**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprints 8 and 9. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 9 is on `main` at `github.com/Franxh090/GLead`; nothing is uncommitted.
+**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprints 8, 9 and 10. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 9 is on `main` at `github.com/Franxh090/GLead`; Sprint 10 is on the branch `claude/wizardly-fermi-6t4qbo`, ready to merge.
 
 ## 1. Where things stand
 
-- **Built:** every PRD P0 item and the P1 list except chord detection, plus curriculum level 4. Seven drills (B1–B5, B8, B9 progressions by ear) plus C4 call and response after each melody, Changes (play-along scoring with approach and passing-note measures), Keys (A1, A2, A4, Find my key), Loops, placement, retests, experiment arms, dashboard with a cohort view for the pilot, Mic lab, Spanish on every screen, eight tunings. `README.md` §Status lists it all.
-- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 708 unit tests, build) is green. `pnpm e2e` runs 37 Playwright specs (34 desktop, 3 at iPhone 15 width) in about two and a half minutes; all pass.
+- **Built:** every PRD P0 item and the P1 list except chord detection, and curriculum levels 1–6. Seven drills (B1–B5, B8, B9 progressions by ear) plus C4 call and response after each melody, Songs by ear (four tunes, phrase by phrase, in a rotating key), Changes (play-along scoring with approach and passing-note measures and a graded Phrases rung), Keys (A1, A2, A4, Find my key), Loops, placement, retests, experiment arms, dashboard with a cohort view for the pilot, Mic lab, Spanish on every screen, eight tunings. `README.md` §Status lists it all.
+- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 714 unit tests, build) is green. `pnpm e2e` runs 39 Playwright specs (36 desktop, 3 at iPhone 15 width) in about two and a half minutes; all pass.
 - **Deployment:** `.github/workflows/pages.yml` builds `main` and publishes `dist` to GitHub Pages with base path `/GLead/`. Pages is enabled (Frank, 24 Oct) and **run 5 deployed**: the site is live at `https://franxh090.github.io/GLead/`.
 
 ## 2. The next things Frank must do
 
-On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
+Merge Sprint 10 into `main` (the deploy follows by itself). On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
 
 If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnpm build` and output `dist`, with no base path at a root domain (`GLEAD_BASE` unset).
 
@@ -43,6 +43,7 @@ If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnp
 - **Test hooks the specs rely on:** `window.__gleadFakeMic = true` before load installs the fake pitch source (`e2e/helpers.ts` `useFakeMic`); `window.__gleadArms` pins the experiment arms (`fixArms`), without which a learner dealt moveable-do labels breaks any spec that taps "1". Drill cards expose `data-target-midi` (and `data-target-midis`, `data-wrong-at`).
 - **Headless audio:** an AudioContext does advance in headless Chromium with `--autoplay-policy=no-user-gesture-required`; the script player still races Tone's `done` against the step length so a stalled clock never blocks a session.
 - **IndexedDB cannot store functions:** `MicLabRun.summary` is the storable summary. Schema versions: 1 base, 2 retests, 3 miclab; append, never edit.
+- **Mic events arrive faster than React re-renders.** A screen that collects several notes must keep the answer so far in a ref (the runner keeps it in its own state; `SongsScreen` and `C4Panel` use refs). Reading React state inside the mic callback lost seven of eight notes once.
 - `pnpm verify` does **not** run e2e; run `pnpm e2e` separately (about two minutes) before pushing anything that touches screens.
 - Commit as Frank with `-c user.name="Frank" -c user.email="zomewho@gmail.com"`; `gh` is not authenticated, but the public GitHub API and the GitHub MCP tools read workflow runs.
 
@@ -54,5 +55,5 @@ See `CLAUDE.md` §Layout. The pure cores to read first: `src/core/session/runner
 
 1. Do the Mic lab on the iPhone (Frank). Fix whatever iOS Safari shows; nothing has run on a real device yet. The C4 response panel and the new tunings have only run in Chromium.
 2. Interleaved-vs-blocked results will take weeks; nothing to build there yet.
-3. After the pilot: fixes from exports and interviews (the cohort view on Progress reads several exports at once), then levels 5–6 of the curriculum: phrase building as a graded drill (C4's in-key share and the Changes approach measures are its first numbers) and learning a song by ear. Level 4 (ii–V–I and 7ths in B2/B3, progressions in B9, passing notes measured on Changes) is covered.
+3. After the pilot: fixes from exports and interviews (the cohort view on Progress reads several exports at once). The curriculum's six levels are covered in software; what the pilot says about them decides what comes next. More songs are cheap to add: `src/songs/catalogue.ts`, in degrees, traditional or public-domain only, and the catalogue test checks the bars add up.
 4. Chord detection (P1) is the one PRD item left; it needs a polyphonic detector, which pitchy is not.

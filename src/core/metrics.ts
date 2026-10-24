@@ -107,6 +107,11 @@ export function passingNotes(trials: readonly TrialEvent[], drillId = 'c1-change
   };
 }
 
+/** Song phrases by ear (Songs, Sprint 10): melody and chord attempts over the catalogue. */
+export function songPhraseRate(trials: readonly TrialEvent[], drillId = 'b10-songs'): Tally {
+  return tallyAll(trials.filter((t) => t.drillId === drillId));
+}
+
 /** The placement baseline per skill, from the placement session's trials. */
 export function placementBaseline(trials: readonly TrialEvent[]): Record<string, Tally> {
   return tallyBy(
@@ -189,7 +194,11 @@ export interface ArmComparison {
 /** Accuracy by arm for each built-in experiment, from the trial log. */
 export function experimentReport(trials: readonly TrialEvent[]): ArmComparison[] {
   const practice = practiceOnly(trials).filter(
-    (t) => t.retest === 'none' && t.drillId !== 'c1-changes' && t.drillId !== 'c4-response',
+    (t) =>
+      t.retest === 'none' &&
+      t.drillId !== 'c1-changes' &&
+      t.drillId !== 'c4-response' &&
+      t.drillId !== 'b10-songs',
   );
   const by = <K extends string>(
     keyOf: (t: TrialEvent) => K,

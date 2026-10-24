@@ -3,6 +3,7 @@ import { LOOP_FEELS, LOOP_PROGRESSIONS } from '../audio/loops';
 import { translate } from '../core/i18n';
 import { RUNGS } from '../core/scoring/changes';
 import { WHY_CARDS } from '../core/whycards';
+import { SONGS } from '../songs/catalogue';
 import { DRILLS, SKILLS } from './registry';
 
 /** Data the screens show through `t()` by id: every id needs an English entry (Spanish follows by the i18n test). */
@@ -13,6 +14,9 @@ describe('interface text for ids', () => {
       ...DRILLS.map((d) => `rationale.${d.id}`),
       'rationale.c1-changes',
       'rationale.c4-response',
+      'rationale.b10-songs',
+      ...SONGS.map((s) => `song.${s.id}.title`),
+      ...SONGS.map((s) => `songs.source.${s.source}`),
       ...WHY_CARDS.flatMap((c) => [`why.${c.id}.title`, `why.${c.id}.body`]),
       ...RUNGS.flatMap((r) => [`rung.${r.id}.title`, `rung.${r.id}.hint`]),
       ...LOOP_PROGRESSIONS.map((p) => `loop.${p.id}.desc`),
@@ -25,5 +29,6 @@ describe('interface text for ids', () => {
     for (const s of SKILLS) expect(translate('en', `skill.${s.id}`)).toBe(s.title);
     for (const d of DRILLS) expect(translate('en', `rationale.${d.id}`)).toBe(d.rationale);
     for (const r of RUNGS) expect(translate('en', `rung.${r.id}.title`)).toBe(r.title);
+    for (const s of SONGS) expect(translate('en', `song.${s.id}.title`)).toBe(s.title);
   });
 });

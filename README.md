@@ -21,7 +21,7 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprints 0–9 of the plan in `docs/implementation-plan.md` are built, apart from
+Sprints 0–10 of the plan in `docs/implementation-plan.md` are built, apart from
 the parts only people can do: the four-week pilot, the teacher interviews and
 the device measurement (R2), for which the app carries its own Mic lab. What
 works today:
@@ -38,7 +38,12 @@ works today:
 - **Sessions with a shape**: the goal up front, reviews first, then new
   material, then a scored play-along over a loop (**Changes**) whose targets
   hide once two takes land 80%; every landing records how it was reached and
-  the passing notes before the next change.
+  the passing notes before the next change, and the **Phrases** rung counts a
+  chord tone only when a step leads into it.
+- **Songs**: traditional and public-domain tunes (and one original study)
+  learned by ear phrase by phrase in a key the app picks: hear the melody and
+  play it back, hear the chords and name them. Learned phrases are read back
+  from the log.
 - **Keys**: any key's scale and chords on the neck with sound on every tap,
   each chord in three CAGED zones, circle neighbours, a capo helper, six "why
   it works" cards heard before read, and **Find my key**: play a phrase and
@@ -58,7 +63,7 @@ works today:
   learner's export read-only, or several at once as a cohort with the
   experiment arms pooled. `research/R5-measurement.md`,
   `docs/pilot-kit.md` and `docs/teacher-interview-guide.md` carry the pilot.
-- 708 unit tests and 37 Playwright specs (`pnpm e2e`) pass.
+- 714 unit tests and 39 Playwright specs (`pnpm e2e`) pass.
 
 Not yet: chord detection, real-song clips, sync.
 

@@ -27,6 +27,19 @@ describe('approaches and passing notes (Sprint 9)', () => {
     expect(stepShare(r)).toBeCloseTo(1 / 2); // of the two landings with a note before them
   });
 
+  it('grades the phrase rung: a chord tone counts only when reached by step', () => {
+    const s = createChangeScorer({ chords, rung: 'phrase', bpm: 120, key: G });
+    s.start();
+    s.onChord(0, 1000);
+    s.onNote(55, 1100); // G from nothing: miss
+    s.onNote(60, 2500); // C passing
+    s.onNote(62, 2950); // D, the root of chord 2, by step: hit
+    s.onChord(1, 3000);
+    s.onChord(2, 5000);
+    s.onNote(52, 5100); // E by leap from D: miss
+    expect(s.result().map((r) => r.outcome)).toEqual(['miss', 'hit', 'miss']);
+  });
+
   it('marks a repeated note as the same note and leaves in-key counts null without a key', () => {
     const s = createChangeScorer({ chords, rung: 'roots', bpm: 120 });
     s.start();

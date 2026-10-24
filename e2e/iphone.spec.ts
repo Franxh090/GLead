@@ -13,7 +13,7 @@ test.describe('iPhone width', () => {
   test('every screen fits the phone', async ({ page }) => {
     await page.goto('/');
     await fits(page, 'Today');
-    for (const name of ['Keys', 'Changes', 'Loops', 'Progress', 'Settings']) {
+    for (const name of ['Keys', 'Changes', 'Loops', 'Songs', 'Progress', 'Settings']) {
       await page.getByRole('button', { name }).click();
       await fits(page, name);
     }

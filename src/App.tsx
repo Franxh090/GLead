@@ -7,11 +7,12 @@ import { MicLabScreen } from './screens/MicLabScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { SessionScreen, type PlayAlongPreset, type SessionOptions } from './screens/SessionScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { SongsScreen } from './screens/SongsScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import styles from './styles/app.module.css';
 
 type Screen =
-  'today' | 'session' | 'keys' | 'changes' | 'loops' | 'progress' | 'settings' | 'miclab';
+  'today' | 'session' | 'keys' | 'changes' | 'loops' | 'songs' | 'progress' | 'settings' | 'miclab';
 
 export function App() {
   const t = useT();
@@ -43,6 +44,7 @@ export function App() {
         {tab('keys', t('nav.keys'))}
         {tab('changes', t('nav.changes'))}
         {tab('loops', t('nav.loops'))}
+        {tab('songs', t('nav.songs'))}
         {tab('progress', t('nav.progress'))}
         {tab('settings', t('nav.settings'))}
       </nav>
@@ -61,6 +63,7 @@ export function App() {
         {screen === 'keys' && <KeysScreen />}
         {screen === 'changes' && <ChangesScreen preset={preset} />}
         {screen === 'loops' && <LoopsScreen />}
+        {screen === 'songs' && <SongsScreen />}
         {screen === 'progress' && <ProgressScreen />}
         {screen === 'settings' && <SettingsScreen onMicLab={() => setScreen('miclab')} />}
         {screen === 'miclab' && <MicLabScreen onExit={() => setScreen('settings')} />}

@@ -15,7 +15,7 @@ import { degreeAt } from '../keymap';
 import { toneSemitones, type ChordTone } from '../../drills/b3-chord-tone/logic';
 import type { ChordChangeHit, Scorer } from '../types';
 
-export type Rung = 'roots' | 'thirds' | 'fifths-sevenths' | 'any';
+export type Rung = 'roots' | 'thirds' | 'fifths-sevenths' | 'any' | 'phrase';
 
 export const RUNGS: readonly { id: Rung; title: string; hint: string }[] = [
   { id: 'roots', title: 'Roots', hint: 'Land on the root at every change.' },
@@ -29,6 +29,11 @@ export const RUNGS: readonly { id: Rung; title: string; hint: string }[] = [
     id: 'any',
     title: 'Any chord tone',
     hint: 'Any note of the chord counts; add passing notes between.',
+  },
+  {
+    id: 'phrase',
+    title: 'Phrases',
+    hint: 'Any chord tone, reached by step: the note before the change leads into it.',
   },
 ];
 
@@ -45,6 +50,7 @@ export function rungTones(rung: Rung, chord: ChordSpec): ChordTone[] {
     case 'fifths-sevenths':
       return has7 ? ['5', '7'] : ['5'];
     case 'any':
+    case 'phrase':
       return all;
   }
 }
@@ -119,10 +125,12 @@ export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
     r.midi = midi;
     r.tone = tone;
     r.offsetMs = at - r.at;
-    r.outcome = tone !== null && r.wanted.includes(tone) ? 'hit' : 'miss';
     const before = [...notes].reverse().find((n) => n.at < at);
     const gap = before ? Math.abs(before.midi - midi) : 0;
     r.approach = !before ? 'none' : gap === 0 ? 'same' : gap <= 2 ? 'step' : 'leap';
+    // The phrase rung (PRD C1's last step) wants the chord tone reached by step.
+    const landed = tone !== null && r.wanted.includes(tone);
+    r.outcome = landed && (opts.rung !== 'phrase' || r.approach === 'step') ? 'hit' : 'miss';
   };
 
   /** The passing notes of `r`: after its landing (or its change, when silent) and before `until`. */
