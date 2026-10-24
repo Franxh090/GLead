@@ -97,6 +97,8 @@ export interface RunnerDeps {
   tuning: DrillContext['tuning'];
   /** Why the session runs; placement and retests measure only (no retries, no card updates). */
   purpose?: SessionPurpose;
+  /** This week's practice schedule, recorded on every trial. */
+  schedule?: 'interleaved' | 'blocked';
 }
 
 export interface SessionRunner {
@@ -253,6 +255,7 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
       retest: deps.retest ?? 'none',
       unseenKey: isUnseenKey(key),
       purpose,
+      schedule: deps.schedule ?? 'interleaved',
     };
     void deps.repo.logTrial(trial);
 

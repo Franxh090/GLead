@@ -21,38 +21,35 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprint 4 of the plan in `docs/implementation-plan.md` is built: the first
-full build for a pilot. What works today:
+Sprint 5 of the plan in `docs/implementation-plan.md` is built: the pilot
+build with its kit. What works today:
 
-- **Five ear-to-hand drills**, each answered on the guitar through the
-  microphone or by tapping, with feedback on the neck, a confirm prompt when
-  the detector is unsure, misses that come back a few trials later, and FSRS
-  scheduling per item:
-  - **B1 "Scale degree in key"**: a cadence sets the key, one note sounds, play it back or tap its degree.
-  - **B2 "Chord function"**: a cadence, then one diatonic chord; tap its Roman numeral or play its root.
-  - **B3 "Note against chord"**: a chord strums, then one of its notes; play it back or tap root, 3rd, 5th or 7th.
-  - **B4 "Find it on the neck"**: a cadence, then a three- or four-note melody; play it back in order.
-  - **B5 "Spot the error"**: four chords with one outside the key, or five scale notes with one a half step off; which?
-- **Sessions with a shape**: the goal is stated up front; reviews warm the
-  ear up, then new material, and a session of ten minutes or more hands over
-  to **Changes** for a play-along scored at every chord change. Keys rotate
-  every trial; six keys per mode are held out for transfer.
-- **Placement test** and **retests** at 1, 7 and 30 days in unseen keys, both
-  measuring only.
-- **Built-in experiments**: each learner is dealt arms at first run;
-  imagine-first and full-or-faded feedback are drawn per trial and recorded on
-  every trial, so Progress can compare like with like.
+- **Five ear-to-hand drills** (B1 scale degree, B2 chord function, B3 note
+  against chord, B4 melodies by ear, B5 spot the error), each answered on the
+  guitar through the microphone or by tapping, with feedback on the neck, a
+  confirm prompt when the detector is unsure, misses that come back, and FSRS
+  scheduling per item.
+- **Sessions with a shape**: the goal up front, reviews first, then new
+  material, then a scored play-along over a loop (**Changes**), whose targets
+  hide by themselves once two takes land 80%.
+- **Keys**: any key's scale by degree and its chords by numeral and job on the
+  neck, sound on every tap, and each chord in three places up the neck through
+  its CAGED shapes (A1, A2). **Loops** serves the PRD progressions in any key.
+- **Measuring**: a placement test; retests at 1, 7 and 30 days in unseen
+  keys, with the skill resting until its retest is done; experiment arms dealt
+  once per learner (imagine-first and feedback variant per trial, label
+  scheme per learner, interleaved and blocked practice alternating by week),
+  all recorded on every trial.
 - **Progress** leads with delayed retests, transfer and the chord-tone hit
-  rate, then a per-skill report (baseline, trials, recent accuracy, trials to
-  criterion, learning rate, retests, transfer) and the experiment arms.
-  Everything exports as JSON. `research/R5-measurement.md` defines the
-  measures and the pilot protocol.
-- 665 unit tests and 17 Playwright specs (`pnpm e2e`) pass.
+  rate, then a per-skill report and the experiment arms, and can load another
+  learner's export file read-only, for the pilot.
+- `research/R5-measurement.md` (measures and protocol), `docs/pilot-kit.md`
+  (participant and author checklists) and `docs/teacher-interview-guide.md`.
+- 672 unit tests and 20 Playwright specs (`pnpm e2e`) pass.
 
-Not yet: the mic confidence threshold and the scoring window are provisional
-until R2 measures real guitars on real phones; targets on the neck fade by a
-switch, not by accuracy; interleaved-vs-blocked weeks are designed in R5 but
-not built; Spanish and alternate tunings (P1).
+Still provisional until R2 measures real guitars on real phones: the mic
+confidence threshold, the scoring window and the anticipation allowance.
+Not yet: Spanish and alternate tunings (P1), "why it works" cards (A4).
 
 ## Run it locally
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChangesScreen } from './screens/ChangesScreen';
+import { KeysScreen } from './screens/KeysScreen';
 import { LoopsScreen } from './screens/LoopsScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { SessionScreen, type PlayAlongPreset, type SessionOptions } from './screens/SessionScreen';
@@ -7,7 +8,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { TodayScreen } from './screens/TodayScreen';
 import styles from './styles/app.module.css';
 
-type Screen = 'today' | 'session' | 'changes' | 'loops' | 'progress' | 'settings';
+type Screen = 'today' | 'session' | 'keys' | 'changes' | 'loops' | 'progress' | 'settings';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('today');
@@ -35,6 +36,7 @@ export function App() {
       <nav className={styles.nav} aria-label="Main">
         <span className={styles.brand}>GLead</span>
         {tab('today', 'Today')}
+        {tab('keys', 'Keys')}
         {tab('changes', 'Changes')}
         {tab('loops', 'Loops')}
         {tab('progress', 'Progress')}
@@ -52,6 +54,7 @@ export function App() {
             }}
           />
         )}
+        {screen === 'keys' && <KeysScreen />}
         {screen === 'changes' && <ChangesScreen preset={preset} />}
         {screen === 'loops' && <LoopsScreen />}
         {screen === 'progress' && <ProgressScreen />}

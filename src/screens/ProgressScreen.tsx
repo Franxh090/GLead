@@ -30,14 +30,39 @@ function download(name: string, text: string) {
   URL.revokeObjectURL(url);
 }
 
+/** Parse an export file (`exportJson`) into trials with real dates; throws on anything else. */
+export function parseExport(text: string): { trials: TrialEvent[]; exportedAt: string } {
+  const data = JSON.parse(text) as { app?: string; exportedAt?: string; trials?: unknown[] };
+  if (data.app !== 'glead' || !Array.isArray(data.trials)) throw new Error('Not a GLead export');
+  const trials = (data.trials as (TrialEvent & { at: string | Date })[]).map((t) => ({
+    ...t,
+    at: new Date(t.at),
+  }));
+  return { trials, exportedAt: data.exportedAt ?? 'unknown date' };
+}
+
 export function ProgressScreen() {
   const app = useApp();
-  const [trials, setTrials] = useState<TrialEvent[] | null>(null);
+  const [own, setOwn] = useState<TrialEvent[] | null>(null);
+  const [loaded, setLoaded] = useState<{ trials: TrialEvent[]; label: string } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    void app.repo.trials().then(setTrials);
+    void app.repo.trials().then(setOwn);
   }, [app]);
 
+  const onFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const { trials: t, exportedAt } = parseExport(await file.text());
+      setLoaded({ trials: t, label: `${file.name} (exported ${exportedAt})` });
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const trials = loaded ? loaded.trials : own;
   if (!trials) return <p className={styles.muted}>Loading…</p>;
 
   const practice = practiceOnly(trials);
@@ -46,8 +71,8 @@ export function ProgressScreen() {
   const tr = transfer(trials);
   const hits = chordToneHitRate(trials);
   const baseline = placementBaseline(trials);
-  const reports = SKILLS.map((sk) => skillReport(trials, sk.id)).filter(
-    (r) => r.practice.trials > 0 || r.baseline.trials > 0,
+  const reports = SKILLS.filter((sk) => trials.some((t) => t.skillId === sk.id)).map((sk) =>
+    skillReport(trials, sk.id),
   );
   const experiments = experimentReport(trials);
   const byKey = tallyBy(practice, (t) => t.key);
@@ -60,6 +85,14 @@ export function ProgressScreen() {
   return (
     <div className={styles.card}>
       <h2>Progress</h2>
+      {loaded && (
+        <div className={styles.status} role="status">
+          Viewing <strong>{loaded.label}</strong>, read-only. Nothing from it is saved here.{' '}
+          <button type="button" className={styles.button} onClick={() => setLoaded(null)}>
+            Back to my data
+          </button>
+        </div>
+      )}
       <p className={styles.muted}>
         Delayed and transfer results first: they show what stuck, not what felt fluent today.
       </p>
@@ -248,6 +281,17 @@ export function ProgressScreen() {
         >
           Export my data (JSON)
         </button>
+        <label className={styles.button} style={{ display: 'inline-flex', alignItems: 'center' }}>
+          View an export file
+          <input
+            type="file"
+            accept="application/json,.json"
+            aria-label="View an export file"
+            style={{ display: 'none' }}
+            onChange={(e) => void onFile(e.target.files?.[0])}
+          />
+        </label>
+        {loadError && <span className={styles.bad}>{loadError}</span>}
       </div>
     </div>
   );

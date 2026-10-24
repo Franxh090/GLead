@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createScheduler } from '../vendor/fretfree/engine/scheduler';
-import { STANDARD_TUNING, keyName } from '../vendor/fretfree/theory';
+import { STANDARD_TUNING, keyName, type MusicalKey } from '../vendor/fretfree/theory';
 import { playScript, stopScript } from '../audio/player';
 import { useApp } from '../core/app-context';
 import { newId } from '../core/events/ids';
@@ -14,7 +14,9 @@ import {
   type SessionShape,
 } from '../core/scheduling/plan';
 import { placementOutcome, placementPlan, seedKnownCards } from '../core/scheduling/placement';
-import { RETEST_TRIALS, planRetests } from '../core/scheduling/retests';
+import { RETEST_TRIALS, planRetests, restingSkills } from '../core/scheduling/retests';
+import { decodeArms, scheduleFor } from '../core/experiments';
+import { pick } from '../core/keys';
 import { createSessionRunner, type SessionRunner } from '../core/session/runner';
 import { useSettings } from '../core/settings-store';
 import type { InputAdapter, InputEvent, RetestRecord, SessionPurpose } from '../core/types';
@@ -80,7 +82,16 @@ export function SessionScreen({
     (async () => {
       const cards = await app.repo.allCards();
       const purpose = options.purpose ?? 'practice';
-      const skills = SKILLS.filter((s) => options.skillIds.includes(s.id));
+      const resting =
+        purpose === 'practice' ? restingSkills(await app.repo.retests()) : new Set<string>();
+      const skills = SKILLS.filter((s) => options.skillIds.includes(s.id) && !resting.has(s.id));
+      const schedule =
+        purpose === 'practice'
+          ? scheduleFor(decodeArms(app.settings.get().experimentArm), new Date())
+          : 'interleaved';
+      const blocked = schedule === 'blocked';
+      // Blocked practice keeps one key per mode for the whole session.
+      const blockKey = new Map<string, MusicalKey>();
       const items = skills.flatMap((s) => s.items());
       const scheduler = createScheduler();
       let plan: PlanEntry[];
@@ -101,6 +112,7 @@ export function SessionScreen({
             cards,
             scheduler,
             rng: Math.random,
+            blocked,
           }),
         );
       }
@@ -108,8 +120,15 @@ export function SessionScreen({
         sessionId,
         plan,
         drillFor: drillForItem,
-        keyPoolFor: (item) =>
-          purpose === 'retest' ? unseenKeys(modeOfItem(item)) : practisedKeys(modeOfItem(item)),
+        keyPoolFor: (item) => {
+          const mode = modeOfItem(item);
+          if (purpose === 'retest') return unseenKeys(mode);
+          if (!blocked) return practisedKeys(mode);
+          const pool = practisedKeys(mode);
+          const k = blockKey.get(mode) ?? (pool[pick(pool.length, Math.random)] as MusicalKey);
+          blockKey.set(mode, k);
+          return [k];
+        },
         cards,
         scheduler,
         repo: app.repo,
@@ -122,6 +141,7 @@ export function SessionScreen({
         tuning: STANDARD_TUNING,
         purpose,
         retest: options.retest?.delay ?? 'none',
+        schedule,
       });
       if (cancelled) return;
       r.subscribe((st) => {

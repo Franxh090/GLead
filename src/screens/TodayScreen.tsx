@@ -3,7 +3,8 @@ import { createScheduler } from '../vendor/fretfree/engine/scheduler';
 import { useApp } from '../core/app-context';
 import { useSettings } from '../core/settings-store';
 import { SKILLS, skillById } from '../drills/registry';
-import { dueRetests, nextRetest } from '../core/scheduling/retests';
+import { dueRetests, nextRetest, restingSkills } from '../core/scheduling/retests';
+import { decodeArms, scheduleFor } from '../core/experiments';
 import type { RetestRecord } from '../core/types';
 import styles from '../styles/app.module.css';
 import type { SessionOptions } from './SessionScreen';
@@ -34,6 +35,8 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
   const now = new Date();
   const dueNow = dueRetests(retests, now);
   const upcoming = nextRetest(retests, now);
+  const resting = restingSkills(retests);
+  const schedule = scheduleFor(decodeArms(settings.experimentArm), now);
 
   const toggleSkill = (id: string) =>
     setSkillIds((cur) =>
@@ -120,15 +123,28 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
             <button
               key={sk.id}
               type="button"
-              className={`${styles.button} ${skillIds.includes(sk.id) ? styles.primary : ''}`}
-              aria-pressed={skillIds.includes(sk.id)}
+              className={`${styles.button} ${skillIds.includes(sk.id) && !resting.has(sk.id) ? styles.primary : ''}`}
+              aria-pressed={skillIds.includes(sk.id) && !resting.has(sk.id)}
+              disabled={resting.has(sk.id)}
+              title={
+                resting.has(sk.id)
+                  ? 'Resting until its retest, so the retest measures what stuck'
+                  : undefined
+              }
               onClick={() => toggleSkill(sk.id)}
             >
               {sk.title}
+              {resting.has(sk.id) ? ' (resting)' : ''}
             </button>
           ))}
         </div>
       </div>
+      <p className={styles.muted}>
+        This week's practice is {schedule}
+        {schedule === 'blocked'
+          ? ': one key for the session and skills one after another, the control arm of the interleaving experiment.'
+          : ': keys change every trial and skills are mixed.'}
+      </p>
       {!settings.micEnabled && (
         <p className={styles.muted}>
           The microphone is off, so you answer by tapping. Turn it on in Settings to answer on your
@@ -139,7 +155,8 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
         <button
           type="button"
           className={`${styles.button} ${styles.primary}`}
-          onClick={() => onStart({ minutes, skillIds })}
+          disabled={skillIds.every((id) => resting.has(id))}
+          onClick={() => onStart({ minutes, skillIds: skillIds.filter((id) => !resting.has(id)) })}
         >
           Start session
         </button>

@@ -7,6 +7,7 @@ import {
   learningRate,
   skillReport,
   tallyBy,
+  targetsByDefault,
   transfer,
   trialsToCriterion,
 } from './metrics';
@@ -97,12 +98,30 @@ describe('metrics', () => {
       t({ experimentArm: 'imagine=random;feedback=random;labels=moveable-do' }),
     ];
     const report = experimentReport(trials);
-    expect(report).toHaveLength(3);
+    expect(report).toHaveLength(4);
     expect(report[0]?.arms[0]).toEqual({
       label: 'Imagine first',
       tally: { trials: 1, correct: 1 },
     });
     expect(report[1]?.arms[1]?.tally).toEqual({ trials: 1, correct: 1 });
-    expect(report[2]?.arms[1]?.tally.trials).toBe(1);
+    expect(report[3]?.arms[1]?.tally.trials).toBe(1);
+    expect(report[2]?.arms[0]?.tally.trials).toBe(4);
+  });
+
+  it('hides the targets once two takes in a row land 80%', () => {
+    const take = (sessionId: string, hits: number, n = 4) =>
+      Array.from({ length: n }, (_, i) =>
+        t({
+          sessionId,
+          drillId: 'c1-changes',
+          itemId: 'changes:roots@I-V-vi-IV',
+          correct: i < hits,
+        }),
+      );
+    expect(targetsByDefault([], 'roots')).toBe(true);
+    expect(targetsByDefault(take('a', 4), 'roots')).toBe(true);
+    expect(targetsByDefault([...take('a', 4), ...take('b', 4)], 'roots')).toBe(false);
+    expect(targetsByDefault([...take('a', 4), ...take('b', 2)], 'roots')).toBe(true);
+    expect(targetsByDefault([...take('a', 4), ...take('b', 4)], 'thirds')).toBe(true);
   });
 });

@@ -67,3 +67,13 @@ export function nextRetest(retests: readonly RetestRecord[], now: Date): RetestR
     .sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
   return later[0] ?? null;
 }
+
+/**
+ * Skills that must rest: a retest is scheduled and not yet run, so practice
+ * between criterion and the retest would spoil the measurement (PRD §6
+ * "with no practice between"). Today greys them out and the planner leaves
+ * their items alone.
+ */
+export function restingSkills(retests: readonly RetestRecord[]): Set<string> {
+  return new Set(retests.filter((r) => r.doneAt === null).map((r) => r.skillId));
+}

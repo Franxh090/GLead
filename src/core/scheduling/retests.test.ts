@@ -1,7 +1,7 @@
 import { Rating } from 'ts-fsrs';
 import { describe, expect, it } from 'vitest';
 import type { RetestRecord, TrialEvent } from '../types';
-import { dueRetests, nextRetest, planRetests, practiceTrials } from './retests';
+import { dueRetests, nextRetest, planRetests, practiceTrials, restingSkills } from './retests';
 
 const t = (o: Partial<TrialEvent>): TrialEvent => ({
   trialId: 'x',
@@ -63,5 +63,16 @@ describe('planRetests', () => {
     ];
     expect(dueRetests(all, now).map((x) => x.delay)).toEqual(['7d']);
     expect(nextRetest(all, now)?.delay).toBe('30d');
+  });
+
+  it('rests a skill while any of its retests is pending', () => {
+    const base = { anchoredAt: now, dueAt: now, sessionId: null };
+    expect(
+      restingSkills([
+        { ...base, skillId: 'B1.major', delay: '1d', doneAt: now },
+        { ...base, skillId: 'B1.major', delay: '7d', doneAt: null },
+        { ...base, skillId: 'B2.primary', delay: '1d', doneAt: now },
+      ]),
+    ).toEqual(new Set(['B1.major']));
   });
 });

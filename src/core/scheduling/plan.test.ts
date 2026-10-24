@@ -147,3 +147,26 @@ describe('session shape (D2)', () => {
     expect(sessionShape([], 5, (id) => id).goal).toBe('A short pass over what you know.');
   });
 });
+
+describe('blocked practice (the control arm)', () => {
+  const b1: Item[] = [1, 2, 3].map((d) => ({ id: `degree:${d}@major`, skillId: 'B1.major' }));
+  const b3: Item[] = ['1', '3', '5'].map((t) => ({
+    id: `chord-tone:${t}@major`,
+    skillId: 'B3.triads',
+  }));
+  it('keeps each skill together and still never repeats an item back to back', () => {
+    const plan = planSession({
+      now,
+      minutes: 2,
+      items: [...b1, ...b3],
+      cards: [],
+      scheduler: createScheduler(),
+      rng: seq(),
+      blocked: true,
+    });
+    const skills = plan.map((p) => p.item.skillId);
+    const changes = skills.filter((s, i) => i > 0 && s !== skills[i - 1]).length;
+    expect(changes).toBeLessThanOrEqual(2);
+    for (let i = 1; i < plan.length; i++) expect(plan[i]!.item.id).not.toBe(plan[i - 1]!.item.id);
+  });
+});

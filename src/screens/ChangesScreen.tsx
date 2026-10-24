@@ -24,6 +24,7 @@ import {
   type ChangeRecord,
   type Rung,
 } from '../core/scoring/changes';
+import { targetsByDefault } from '../core/metrics';
 import { useSettings } from '../core/settings-store';
 import type { BackingLoop, InputAdapter, TrialEvent } from '../core/types';
 import { TONE_NAMES, type ChordTone } from '../drills/b3-chord-tone/logic';
@@ -76,6 +77,8 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
   const [rung, setRung] = useState<Rung>(preset ? rungForSkills(preset.skillIds) : 'roots');
   const [passes, setPasses] = useState<number>(preset ? (preset.minutes >= 4 ? 4 : 2) : 2);
   const [showTargets, setShowTargets] = useState(true);
+  const [targetsTouched, setTargetsTouched] = useState(false);
+  const [history, setHistory] = useState<TrialEvent[] | null>(null);
   const [take, setTake] = useState<TakeState>('idle');
   const [current, setCurrent] = useState<number | null>(null);
   const [records, setRecords] = useState<ChangeRecord[]>([]);
@@ -130,7 +133,7 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
       confidence: 1,
       rating: r.outcome === 'hit' ? 3 : 1,
       imagineFirst: false,
-      feedbackVariant: showTargets ? 'full' : 'faded',
+      feedbackVariant: targetsOn ? 'full' : 'faded',
       experimentArm: settings.experimentArm,
       retest: 'none',
       unseenKey: isUnseenKey(key),
@@ -196,6 +199,13 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
     setTake('playing');
   };
 
+  // Targets hide by themselves once two takes on this rung landed 80% (PRD C1).
+  useEffect(() => {
+    void app.repo.trials().then(setHistory);
+  }, [app, take]);
+  const suggestedTargets = history ? targetsByDefault(history, rung) : true;
+  const targetsOn = targetsTouched ? showTargets : suggestedTargets;
+
   // Mic notes go to the scorer while a take runs.
   useEffect(() => {
     if (!mic || take !== 'playing') return;
@@ -207,7 +217,7 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
 
   const sounding = current !== null ? chords[current] : null;
   const markers: FretMarker[] = [];
-  if (take === 'playing' && sounding && showTargets) {
+  if (take === 'playing' && sounding && targetsOn) {
     const wanted = rungTones(rung, sounding);
     const tones = chordTones(sounding);
     for (const t of wanted) {
@@ -336,12 +346,16 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
             <button
               type="button"
               role="switch"
-              aria-checked={showTargets}
+              aria-checked={targetsOn}
               aria-label="Show the targets on the neck"
-              className={`${styles.button} ${showTargets ? styles.primary : ''}`}
-              onClick={() => setShowTargets(!showTargets)}
+              className={`${styles.button} ${targetsOn ? styles.primary : ''}`}
+              onClick={() => {
+                setTargetsTouched(true);
+                setShowTargets(!targetsOn);
+              }}
             >
-              {showTargets ? 'On' : 'Off'}
+              {targetsOn ? 'On' : 'Off'}
+              {!targetsTouched && !suggestedTargets ? ' (hidden: you landed two takes)' : ''}
             </button>
           </div>
         </>

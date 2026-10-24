@@ -188,6 +188,13 @@ export function experimentReport(trials: readonly TrialEvent[]): ArmComparison[]
       arms: by((t) => t.feedbackVariant, { full: 'Full feedback', faded: 'Faded feedback' }),
     },
     {
+      question: 'Interleaved or blocked weeks?',
+      arms: by((t) => t.schedule ?? 'interleaved', {
+        interleaved: 'Interleaved',
+        blocked: 'Blocked',
+      }),
+    },
+    {
       question: 'Numbers or moveable-do?',
       arms: by((t) => (t.experimentArm.includes('labels=moveable-do') ? 'do' : 'num'), {
         num: 'Numbers',
@@ -195,4 +202,30 @@ export function experimentReport(trials: readonly TrialEvent[]): ArmComparison[]
       }),
     },
   ];
+}
+
+/**
+ * Whether the Changes screen should show the targets by default (PRD C1:
+ * hidden as accuracy rises): off once the last two takes on this rung both
+ * landed 80% or more of their changes.
+ */
+export function targetsByDefault(
+  trials: readonly TrialEvent[],
+  rung: string,
+  drillId = 'c1-changes',
+): boolean {
+  const takes = new Map<string, Tally>();
+  for (const t of trials) {
+    if (t.drillId !== drillId || !t.itemId.startsWith(`changes:${rung}@`)) continue;
+    let tally = takes.get(t.sessionId);
+    if (!tally) {
+      tally = { trials: 0, correct: 0 };
+      takes.set(t.sessionId, tally);
+    }
+    tally.trials += 1;
+    if (t.correct) tally.correct += 1;
+  }
+  const last = [...takes.values()].slice(-2);
+  if (last.length < 2) return true;
+  return !last.every((t) => t.trials > 0 && t.correct / t.trials >= 0.8);
 }

@@ -46,6 +46,8 @@ export interface PlanInput {
   cards: readonly CardRecord[];
   scheduler: Pick<Scheduler, 'isDue'>;
   rng: () => number;
+  /** Blocked practice (the control arm): skills one after another, not interleaved. */
+  blocked?: boolean;
 }
 
 /** Shuffle in place (Fisher–Yates) with the given rng. */
@@ -91,7 +93,7 @@ export function spreadRepeats(entries: PlanEntry[]): PlanEntry[] {
 }
 
 export function planSession(input: PlanInput): PlanEntry[] {
-  const { now, minutes, items, cards, scheduler, rng } = input;
+  const { now, minutes, items, cards, scheduler, rng, blocked = false } = input;
   const length = sessionLength(minutes);
   const byId = new Map(cards.map((c) => [c.itemId, c]));
   const known = new Set(cards.map((c) => c.itemId));
@@ -101,9 +103,13 @@ export function planSession(input: PlanInput): PlanEntry[] {
     .sort((x, y) => x.fsrs.due.getTime() - y.fsrs.due.getTime())
     .map((c) => items.find((i) => i.id === c.itemId))
     .filter((i): i is Item => Boolean(i));
-  const reviews: PlanEntry[] = shuffle(due, rng).map((item) => ({ item, kind: 'review' }));
+  const reviews: PlanEntry[] = (blocked ? groupBySkill(due) : shuffle(due, rng)).map((item) => ({
+    item,
+    kind: 'review',
+  }));
 
-  const fresh = roundRobinBySkill(items.filter((i) => !known.has(i.id)));
+  const unknown = items.filter((i) => !known.has(i.id));
+  const fresh = blocked ? groupBySkill(unknown) : roundRobinBySkill(unknown);
   const cap = Math.min(newItemCap(minutes), fresh.length);
   const chosen = fresh.slice(0, cap);
   const news: PlanEntry[] = [];
@@ -114,7 +120,9 @@ export function planSession(input: PlanInput): PlanEntry[] {
     }
   }
 
-  let plan = spreadSkills(interleave(reviews, news));
+  let plan = blocked
+    ? spreadRepeats([...reviews, ...news])
+    : spreadSkills(interleave(reviews, news));
   // Top up a short plan with the items least recently reviewed, so a session
   // is never shorter than its budget while anything is practisable.
   if (plan.length < length) {
@@ -128,9 +136,24 @@ export function planSession(input: PlanInput): PlanEntry[] {
     for (let k = 0; plan.length + extra.length < length && sorted.length > 0; k++) {
       extra.push({ item: sorted[k % sorted.length] as Item, kind: 'review' });
     }
-    plan = spreadSkills(spreadRepeats([...plan, ...shuffle(extra, rng)]));
+    plan = blocked
+      ? spreadRepeats([
+          ...plan,
+          ...groupBySkill(extra.map((e) => e.item)).map((item) => ({
+            item,
+            kind: 'review' as const,
+          })),
+        ])
+      : spreadSkills(spreadRepeats([...plan, ...shuffle(extra, rng)]));
   }
   return plan.slice(0, length);
+}
+
+/** Items in skill order, each skill's items together (blocked practice). */
+export function groupBySkill(items: readonly Item[]): Item[] {
+  const order: string[] = [];
+  for (const i of items) if (!order.includes(i.skillId)) order.push(i.skillId);
+  return order.flatMap((skillId) => items.filter((i) => i.skillId === skillId));
 }
 
 /**

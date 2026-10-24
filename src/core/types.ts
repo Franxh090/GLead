@@ -224,6 +224,8 @@ export interface TrialEvent {
   unseenKey: boolean;
   /** Absent on rows written before Sprint 3: practice. */
   purpose?: SessionPurpose;
+  /** The week's practice schedule (absent before Sprint 5: interleaved). */
+  schedule?: 'interleaved' | 'blocked';
 }
 
 export interface SessionRecord {
