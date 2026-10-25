@@ -20,6 +20,10 @@ For the four-week pilot in `research/R5-measurement.md` §4. Two audiences: the 
 
 ## 3. Every week (2 minutes)
 
+**Progress → Export my data (JSON)** and send the file. Keep a copy: on a new phone, or after a browser cleared its storage, **Progress → Restore from an export** brings it back (running it twice adds nothing twice). If **Settings → Storage** says the browser may clear your data, tap **Ask the browser to keep it**.
+
+No guitar at hand? On **Today**, set **Guitar: Not now**: the ear skills run on their own and you answer by tapping; melodies, the play-along and Songs wait for the guitar. The file records which answers were tapped and which were played.
+
 **Progress → Export my data (JSON)** and send the file. It holds which exercises you answered, in what key, what you answered, whether it was right, how long it took and how sure the microphone was. It never holds audio.
 
 ## 4. Running the pilot (the author)

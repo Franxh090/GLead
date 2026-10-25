@@ -7,6 +7,7 @@ const skill = (id: string, n: number): Skill => ({
   id,
   title: id,
   drillId: 'd',
+  needsGuitar: false,
   items: () => Array.from({ length: n }, (_, i) => ({ id: `${id}:${i}`, skillId: id })),
 });
 const skills = [

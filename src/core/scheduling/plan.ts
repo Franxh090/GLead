@@ -249,10 +249,12 @@ export function sessionShape(
   minutes: number,
   titleOf: (skillId: string) => string,
   phrases: ShapePhrases = ENGLISH_PHRASES,
+  /** False without a guitar: no play-along to hand over to. */
+  allowPlayAlong = true,
 ): SessionShape {
   const reviews = plan.filter((e) => e.kind === 'review').length;
   const concepts = [...new Set(plan.filter((e) => e.kind === 'new').map((e) => e.item.skillId))];
-  const playAlong = minutes >= 10 ? { minutes: minutes >= 20 ? 4 : 2 } : null;
+  const playAlong = allowPlayAlong && minutes >= 10 ? { minutes: minutes >= 20 ? 4 : 2 } : null;
   const parts: string[] = [];
   if (reviews > 0) parts.push(phrases.reviews(reviews));
   if (concepts.length > 0) parts.push(phrases.concepts(concepts.map(titleOf)));

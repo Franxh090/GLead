@@ -21,7 +21,7 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprints 0–11 of the plan in `docs/implementation-plan.md` are built, apart from
+Sprints 0–12 of the plan in `docs/implementation-plan.md` are built, apart from
 the parts only people can do: the four-week pilot, the teacher interviews and
 the device measurement (R2), for which the app carries its own Mic lab. What
 works today:
@@ -67,8 +67,15 @@ works today:
   experiment arms pooled. `research/R5-measurement.md`,
   `docs/pilot-kit.md` and `docs/teacher-interview-guide.md` carry the pilot.
 - Installed from Safari or Chrome it works offline, and a new version waits for
-  a tap on Reload rather than interrupting a session.
-- 718 unit tests and 42 Playwright specs (`pnpm e2e`) pass.
+  a tap on Reload rather than interrupting a session. **Restore from an export**
+  brings a log back onto a new phone, merged by id so it is safe to run twice;
+  Settings says whether the browser has promised to keep the data.
+- **With or without a guitar.** Today separates the ear-only skills (answered by
+  tapping) from the ear-to-hand ones, and a "Guitar: not now" switch runs a
+  tap-only session with no mic, no play-along and no call and response. The log
+  keeps tapped and played answers apart.
+- 726 unit tests (including screen tests for Today, Settings and Progress) and
+  45 Playwright specs (`pnpm e2e`) pass.
 
 Not yet: real-song clips, sync. Chord hearing has not met a real guitar.
 

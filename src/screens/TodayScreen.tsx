@@ -3,7 +3,7 @@ import { createScheduler } from '../vendor/fretfree/engine/scheduler';
 import { useApp } from '../core/app-context';
 import { useSettings } from '../core/settings-store';
 import { useT } from '../core/i18n';
-import { SKILLS, skillTitle } from '../drills/registry';
+import { SKILLS, skillById, skillTitle } from '../drills/registry';
 import { dueRetests, nextRetest, restingSkills } from '../core/scheduling/retests';
 import { decodeArms, scheduleFor } from '../core/experiments';
 import type { RetestRecord } from '../core/types';
@@ -49,6 +49,9 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
   const resting = restingSkills(retests);
   const schedule = scheduleFor(decodeArms(settings.experimentArm), now);
 
+  const guitar = settings.guitarAtHand;
+  const usable = (id: string) => guitar || !skillById(id).needsGuitar;
+  const chosen = skillIds.filter((id) => !resting.has(id) && usable(id));
   const toggleSkill = (id: string) =>
     setSkillIds((cur) =>
       cur.includes(id) ? (cur.length > 1 ? cur.filter((x) => x !== id) : cur) : [...cur, id],
@@ -137,34 +140,68 @@ export function TodayScreen({ onStart }: { onStart(options: SessionOptions): voi
         </div>
       </div>
       <div className={styles.field}>
+        <span>{t('today.guitar')}</span>
+        <div className={styles.row} role="group" aria-label={t('today.guitar')}>
+          {[true, false].map((v) => (
+            <button
+              key={String(v)}
+              type="button"
+              className={`${styles.button} ${guitar === v ? styles.primary : ''}`}
+              aria-pressed={guitar === v}
+              onClick={() => void app.settings.update({ guitarAtHand: v })}
+            >
+              {t(v ? 'today.guitarYes' : 'today.guitarNo')}
+            </button>
+          ))}
+        </div>
+      </div>
+      {!guitar && <p className={styles.muted}>{t('today.noGuitarNote')}</p>}
+      <div className={styles.field}>
         <span>{t('today.skills')}</span>
         <div className={styles.row} role="group" aria-label={t('today.skills')}>
-          {SKILLS.map((sk) => (
-            <button
-              key={sk.id}
-              type="button"
-              className={`${styles.button} ${skillIds.includes(sk.id) && !resting.has(sk.id) ? styles.primary : ''}`}
-              aria-pressed={skillIds.includes(sk.id) && !resting.has(sk.id)}
-              disabled={resting.has(sk.id)}
-              title={resting.has(sk.id) ? t('today.restingHint') : undefined}
-              onClick={() => toggleSkill(sk.id)}
-            >
-              {skillTitle(sk.id)}
-              {resting.has(sk.id) ? t('today.resting') : ''}
-            </button>
+          {[false, true].map((needs) => (
+            <div key={String(needs)} className={styles.row} style={{ width: '100%' }}>
+              <span className={styles.muted} style={{ width: '100%' }}>
+                {t(needs ? 'today.withGuitar' : 'today.earOnly')}
+              </span>
+              {SKILLS.filter((sk) => sk.needsGuitar === needs).map((sk) => {
+                const on = chosen.includes(sk.id);
+                const off = resting.has(sk.id) || !usable(sk.id);
+                return (
+                  <button
+                    key={sk.id}
+                    type="button"
+                    className={`${styles.button} ${on ? styles.primary : ''}`}
+                    aria-pressed={on}
+                    disabled={off}
+                    title={
+                      resting.has(sk.id)
+                        ? t('today.restingHint')
+                        : !usable(sk.id)
+                          ? t('today.needsGuitarHint')
+                          : undefined
+                    }
+                    onClick={() => toggleSkill(sk.id)}
+                  >
+                    {skillTitle(sk.id)}
+                    {resting.has(sk.id) ? t('today.resting') : ''}
+                  </button>
+                );
+              })}
+            </div>
           ))}
         </div>
       </div>
       <p className={styles.muted}>
         {t(schedule === 'blocked' ? 'today.scheduleBlocked' : 'today.scheduleInterleaved')}
       </p>
-      {!settings.micEnabled && <p className={styles.muted}>{t('today.micOff')}</p>}
+      {guitar && !settings.micEnabled && <p className={styles.muted}>{t('today.micOff')}</p>}
       <div className={styles.row}>
         <button
           type="button"
           className={`${styles.button} ${styles.primary}`}
-          disabled={skillIds.every((id) => resting.has(id))}
-          onClick={() => onStart({ minutes, skillIds: skillIds.filter((id) => !resting.has(id)) })}
+          disabled={chosen.length === 0}
+          onClick={() => onStart({ minutes, skillIds: chosen, noGuitar: !guitar })}
         >
           {t('today.start')}
         </button>

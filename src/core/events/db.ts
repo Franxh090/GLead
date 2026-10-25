@@ -30,6 +30,8 @@ export interface Settings {
   micEnabled: boolean;
   /** Hear strummed chords through chroma templates (Sprint 11, experimental). */
   chordDetection: boolean;
+  /** Off when the learner has no guitar at hand: ear-only skills, answers by tap, no play-along (Sprint 12). */
+  guitarAtHand: boolean;
   soundOn: boolean;
   volume: number;
   /** The learner's experiment arm, drawn once at first run (PRD §6). */
@@ -51,6 +53,7 @@ export const DEFAULT_SETTINGS: Settings = {
   guideLevel: 3,
   micEnabled: false,
   chordDetection: false,
+  guitarAtHand: true,
   soundOn: true,
   volume: 0.8,
   experimentArm: 'default',

@@ -310,6 +310,27 @@ const en: Dict = {
   'pwa.update': 'A new version of GLead is ready.',
   'pwa.reload': 'Reload',
   'pwa.dismiss': 'Later',
+  'progress.restore': 'Restore from an export',
+  'progress.restored':
+    'Restored: {trials} trials, {sessions} sessions, {cards} cards, {retests} retests, {runs} Mic lab runs. {settings}',
+  'progress.settingsTaken': 'Settings came from the file, since this device had no data.',
+  'progress.settingsKept': 'Your settings were kept.',
+  'settings.counts': '{trials} trials, {sessions} sessions and {cards} cards on this device.',
+  'settings.storage': 'Storage',
+  'settings.storagePersistent': 'The browser has promised to keep your data.',
+  'settings.storageBestEffort':
+    'The browser may clear your data if space runs low or the app goes unused. Export now and then.',
+  'settings.storageUnknown':
+    'This browser does not say whether it will keep your data. Export now and then.',
+  'settings.storageAsk': 'Ask the browser to keep it',
+  'today.guitar': 'Guitar',
+  'today.guitarYes': 'In hand',
+  'today.guitarNo': 'Not now',
+  'today.earOnly': 'Ear only, no guitar needed',
+  'today.withGuitar': 'Guitar in hand',
+  'today.needsGuitarHint': 'Ear to hand: this one waits for the guitar',
+  'today.noGuitarNote':
+    'Without a guitar you answer by tapping and the ear skills run alone. Melodies by ear, the play-along, call and response, Songs and the Mic lab wait for the guitar; the log keeps tapped and played answers apart.',
   'progress.cohortTitle': 'Cohort: {n} exports',
   'progress.cohortNote':
     "Each row is one participant's export, read-only; nothing is saved here. Every percentage carries its trial count, and n is small.",
@@ -799,6 +820,29 @@ const es: Dict = {
   'pwa.update': 'Hay una versión nueva de GLead.',
   'pwa.reload': 'Recargar',
   'pwa.dismiss': 'Luego',
+  'progress.restore': 'Restaurar desde una exportación',
+  'progress.restored':
+    'Restaurado: {trials} intentos, {sessions} sesiones, {cards} tarjetas, {retests} reevaluaciones, {runs} ejecuciones del laboratorio. {settings}',
+  'progress.settingsTaken':
+    'Los ajustes vinieron del archivo, porque este dispositivo no tenía datos.',
+  'progress.settingsKept': 'Se conservaron tus ajustes.',
+  'settings.counts':
+    '{trials} intentos, {sessions} sesiones y {cards} tarjetas en este dispositivo.',
+  'settings.storage': 'Almacenamiento',
+  'settings.storagePersistent': 'El navegador ha prometido conservar tus datos.',
+  'settings.storageBestEffort':
+    'El navegador puede borrar tus datos si falta espacio o la app deja de usarse. Exporta de vez en cuando.',
+  'settings.storageUnknown':
+    'Este navegador no dice si conservará tus datos. Exporta de vez en cuando.',
+  'settings.storageAsk': 'Pedir al navegador que los conserve',
+  'today.guitar': 'Guitarra',
+  'today.guitarYes': 'En mano',
+  'today.guitarNo': 'Ahora no',
+  'today.earOnly': 'Solo oído, sin guitarra',
+  'today.withGuitar': 'Con la guitarra',
+  'today.needsGuitarHint': 'Del oído a la mano: esta espera a la guitarra',
+  'today.noGuitarNote':
+    'Sin guitarra respondes tocando la pantalla y solo corren las destrezas de oído. Melodías de oído, el acompañamiento, pregunta y respuesta, Canciones y el laboratorio de micro esperan a la guitarra; el registro distingue respuestas tocadas y pulsadas.',
   'progress.cohortTitle': 'Cohorte: {n} exportaciones',
   'progress.cohortNote':
     'Cada fila es la exportación de una persona, solo lectura; nada se guarda aquí. Cada porcentaje lleva su recuento de intentos, y n es pequeño.',

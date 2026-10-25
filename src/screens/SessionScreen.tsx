@@ -20,6 +20,7 @@ import { decodeArms, scheduleFor } from '../core/experiments';
 import { pick } from '../core/keys';
 import { createSessionRunner, type SessionRunner } from '../core/session/runner';
 import { useSettings } from '../core/settings-store';
+import { requestPersistence } from '../core/storage';
 import type { InputAdapter, InputEvent, RetestRecord, SessionPurpose } from '../core/types';
 import { drillForItem, modeOfItem, rationaleOf, SKILLS, skillTitle } from '../drills/registry';
 import { B4_ID, type B4Prompt } from '../drills/b4-find-melody/logic';
@@ -35,6 +36,8 @@ export interface SessionOptions {
   purpose?: SessionPurpose;
   /** The retest being run, when `purpose` is `retest`. */
   retest?: RetestRecord;
+  /** No guitar at hand: answers by tap, no mic, no play-along, no call and response. */
+  noGuitar?: boolean;
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -73,7 +76,8 @@ export function SessionScreen({
   const savedRef = useRef(false);
   const reflectionRef = useRef('');
   const scheduleRef = useRef<'interleaved' | 'blocked'>('interleaved');
-  const mic: InputAdapter | null = settings.micEnabled && runner ? app.mic() : null;
+  const mic: InputAdapter | null =
+    settings.micEnabled && !options.noGuitar && runner ? app.mic() : null;
   const micState = useSyncExternalStore(
     (cb) => (mic ? mic.onStateChange(cb) : () => undefined),
     () => mic?.state ?? 'idle',
@@ -167,6 +171,8 @@ export function SessionScreen({
             reflection: reflectionRef.current,
             kind: purpose,
           });
+          // Real data exists now: ask the browser to keep it (Settings shows the answer).
+          void requestPersistence();
           if (purpose === 'placement') {
             const outcome = placementOutcome(
               st.byItem,
@@ -188,13 +194,19 @@ export function SessionScreen({
       });
       const sh =
         purpose === 'practice'
-          ? sessionShape(plan, options.minutes, skillTitle, {
-              reviews: (n) => t(n === 1 ? 'shape.review1' : 'shape.reviews', { n }),
-              concepts: (titles) => t('shape.new', { list: titles.join(t('shape.and')) }),
-              playAlong: (m) => t('shape.play', { n: m }),
-              short: t('shape.short'),
-              separator: ', ',
-            })
+          ? sessionShape(
+              plan,
+              options.minutes,
+              skillTitle,
+              {
+                reviews: (n) => t(n === 1 ? 'shape.review1' : 'shape.reviews', { n }),
+                concepts: (titles) => t('shape.new', { list: titles.join(t('shape.and')) }),
+                playAlong: (m) => t('shape.play', { n: m }),
+                short: t('shape.short'),
+                separator: ', ',
+              },
+              !options.noGuitar,
+            )
           : null;
       setShape(sh);
       setRunner(r);
@@ -222,6 +234,7 @@ export function SessionScreen({
   const purpose = options.purpose ?? 'practice';
   const c4Active =
     purpose === 'practice' &&
+    !options.noGuitar &&
     settings.callResponse &&
     state?.phase === 'feedback' &&
     state.drill?.id === B4_ID;
@@ -358,12 +371,12 @@ export function SessionScreen({
           {state.key ? ` · ${keyName(state.key)}` : ''}
         </span>
         <span style={{ marginLeft: 'auto' }} />
-        {settings.micEnabled && micState !== 'running' && (
+        {mic && micState !== 'running' && (
           <button type="button" className={`${styles.button} ${styles.primary}`} onClick={startMic}>
             {micState === 'error' ? t('session.retryMic') : t('session.startListening')}
           </button>
         )}
-        {settings.micEnabled && micState === 'running' && (
+        {mic && micState === 'running' && (
           <span className={styles.status} role="status">
             {t('session.micOn')}
           </span>

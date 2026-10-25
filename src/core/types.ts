@@ -19,6 +19,11 @@ export interface Skill {
   readonly id: string;
   readonly title: string;
   readonly drillId: string;
+  /**
+   * The answer is played, so the ear-to-hand link is the point (B4). Ear-only
+   * skills answer by tap as well and can be studied without a guitar.
+   */
+  readonly needsGuitar: boolean;
   items(): readonly Item[];
 }
 

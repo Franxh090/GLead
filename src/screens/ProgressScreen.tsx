@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../core/app-context';
 import { useT } from '../core/i18n';
+import { parseExportFile } from '../core/events/import';
 import { exportJson } from '../core/events/repo';
 import {
   accuracyOf,
@@ -38,13 +39,8 @@ function download(name: string, text: string) {
 
 /** Parse an export file (`exportJson`) into trials with real dates; throws on anything else. */
 export function parseExport(text: string): { trials: TrialEvent[]; exportedAt: string } {
-  const data = JSON.parse(text) as { app?: string; exportedAt?: string; trials?: unknown[] };
-  if (data.app !== 'glead' || !Array.isArray(data.trials)) throw new Error('Not a GLead export');
-  const trials = (data.trials as (TrialEvent & { at: string | Date })[]).map((t) => ({
-    ...t,
-    at: new Date(t.at),
-  }));
-  return { trials, exportedAt: data.exportedAt ?? 'unknown date' };
+  const data = parseExportFile(text);
+  return { trials: data.trials ?? [], exportedAt: data.exportedAt ?? 'unknown date' };
 }
 
 export function ProgressScreen() {
@@ -54,10 +50,34 @@ export function ProgressScreen() {
   const [loaded, setLoaded] = useState<{ trials: TrialEvent[]; label: string } | null>(null);
   const [cohort, setCohort] = useState<{ trials: TrialEvent[]; label: string }[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [restored, setRestored] = useState<string | null>(null);
 
   useEffect(() => {
     void app.repo.trials().then(setOwn);
   }, [app]);
+
+  /** Restore: merge an export into this device's data (PRD D6), by id. */
+  const onRestore = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const report = await app.repo.importAll(parseExportFile(await file.text()));
+      if (report.settings) await app.settings.load();
+      setRestored(
+        t('progress.restored', {
+          trials: report.trials,
+          sessions: report.sessions,
+          cards: report.cards,
+          retests: report.retests,
+          runs: report.micLabRuns,
+          settings: t(report.settings ? 'progress.settingsTaken' : 'progress.settingsKept'),
+        }),
+      );
+      setLoadError(null);
+      setOwn(await app.repo.trials());
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   /** One file opens read-only in place of your own data; several open the cohort view. */
   const onFiles = async (files: FileList | null) => {
@@ -338,6 +358,21 @@ export function ProgressScreen() {
             onChange={(e) => void onFiles(e.target.files)}
           />
         </label>
+        <label className={styles.button} style={{ display: 'inline-flex', alignItems: 'center' }}>
+          {t('progress.restore')}
+          <input
+            type="file"
+            accept="application/json,.json"
+            aria-label={t('progress.restore')}
+            style={{ display: 'none' }}
+            onChange={(e) => void onRestore(e.target.files?.[0])}
+          />
+        </label>
+        {restored && (
+          <span className={styles.status} role="status">
+            {restored}
+          </span>
+        )}
         {loadError && <span className={styles.bad}>{loadError}</span>}
       </div>
     </div>

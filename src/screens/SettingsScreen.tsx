@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApp } from '../core/app-context';
 import { decodeArms } from '../core/experiments';
 import { useSettings } from '../core/settings-store';
 import { LANGUAGES, useT } from '../core/i18n';
 import styles from '../styles/app.module.css';
 import { TUNINGS } from '../core/tunings';
+import { persistenceStatus, requestPersistence, type Persistence } from '../core/storage';
 
 function Toggle({
   label,
@@ -39,6 +40,14 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
   const s = useSettings(app.settings);
   const [micCheck, setMicCheck] = useState<string>('');
   const [confirmReset, setConfirmReset] = useState(false);
+  const [counts, setCounts] = useState<{ trials: number; sessions: number; cards: number } | null>(
+    null,
+  );
+  const [persistence, setPersistence] = useState<Persistence>('unknown');
+  useEffect(() => {
+    void app.repo.counts().then(setCounts);
+    void persistenceStatus().then(setPersistence);
+  }, [app, confirmReset]);
 
   const testMic = async () => {
     const mic = app.mic();
@@ -233,6 +242,38 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
       </p>
       <h3>{t('settings.data')}</h3>
       <p className={styles.muted}>{t('settings.dataNote')}</p>
+      {counts && (
+        <p className={styles.muted}>
+          {t('settings.counts', {
+            trials: counts.trials,
+            sessions: counts.sessions,
+            cards: counts.cards,
+          })}
+        </p>
+      )}
+      <div className={styles.field}>
+        <span>{t('settings.storage')}</span>
+        <span className={styles.muted} role="status">
+          {t(
+            persistence === 'persistent'
+              ? 'settings.storagePersistent'
+              : persistence === 'best-effort'
+                ? 'settings.storageBestEffort'
+                : 'settings.storageUnknown',
+          )}
+        </span>
+      </div>
+      {persistence === 'best-effort' && (
+        <div className={styles.row}>
+          <button
+            type="button"
+            className={styles.button}
+            onClick={() => void requestPersistence().then(setPersistence)}
+          >
+            {t('settings.storageAsk')}
+          </button>
+        </div>
+      )}
       <div className={styles.row}>
         {!confirmReset ? (
           <button type="button" className={styles.button} onClick={() => setConfirmReset(true)}>
