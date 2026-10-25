@@ -7,7 +7,9 @@ import { useApp } from '../core/app-context';
 import { newId } from '../core/events/ids';
 import { practisedKeys, unseenKeys } from '../core/keys';
 import {
+  bandDecision,
   planSession,
+  recentBySkill,
   sessionShape,
   shuffle,
   warmUpFirst,
@@ -93,6 +95,8 @@ export function SessionScreen({
     (async () => {
       const cards = await app.repo.allCards();
       const purpose = options.purpose ?? 'practice';
+      const recent = recentBySkill(await app.repo.trials(), options.skillIds);
+      const held = options.skillIds.filter((id) => bandDecision(recent[id]) === 'hold');
       const resting =
         purpose === 'practice' ? restingSkills(await app.repo.retests()) : new Set<string>();
       const skills = SKILLS.filter((s) => options.skillIds.includes(s.id) && !resting.has(s.id));
@@ -125,6 +129,7 @@ export function SessionScreen({
             scheduler,
             rng: Math.random,
             blocked,
+            recent,
           }),
         );
       }
@@ -202,10 +207,12 @@ export function SessionScreen({
                 reviews: (n) => t(n === 1 ? 'shape.review1' : 'shape.reviews', { n }),
                 concepts: (titles) => t('shape.new', { list: titles.join(t('shape.and')) }),
                 playAlong: (m) => t('shape.play', { n: m }),
+                held: (titles) => t('shape.held', { list: titles.join(t('shape.and')) }),
                 short: t('shape.short'),
                 separator: ', ',
               },
               !options.noGuitar,
+              held,
             )
           : null;
       setShape(sh);

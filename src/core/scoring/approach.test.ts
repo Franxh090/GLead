@@ -53,3 +53,22 @@ describe('approaches and passing notes (Sprint 9)', () => {
     expect(stepShare([])).toBeNull();
   });
 });
+
+describe('measured latency (Sprint 13)', () => {
+  it('shifts the window and the reported offset by the device latency', () => {
+    const s = createChangeScorer({ chords, rung: 'roots', bpm: 120, latencyMs: 100 }); // window 500 ms
+    s.start();
+    s.onChord(0, 1000);
+    s.onNote(55, 1580); // heard 580 ms after the change, played at 480: inside the window
+    s.onChord(1, 3000);
+    s.onNote(62, 3080); // heard 80 ms after the change, played 20 ms before it: an anticipation
+    const r = s.result();
+    expect(r[0]).toMatchObject({ outcome: 'hit', offsetMs: 480 });
+    expect(r[1]).toMatchObject({ outcome: 'hit', offsetMs: -20 });
+    const strict = createChangeScorer({ chords, rung: 'roots', bpm: 120 });
+    strict.start();
+    strict.onChord(0, 1000);
+    strict.onNote(55, 1580); // without latency the same note is late
+    expect(strict.result()[0]!.outcome).toBe('silent');
+  });
+});

@@ -81,6 +81,8 @@ export interface ChangeScorerOptions {
   windowBeats?: number;
   /** The key, so passing notes can be counted as in or out of it (PRD C1: add passing notes). */
   key?: MusicalKey;
+  /** Detector latency in ms: a note heard at `t` was played at `t - latencyMs`. 0 for taps. */
+  latencyMs?: number;
 }
 
 /** How a landing note was reached from the note before it. */
@@ -112,6 +114,7 @@ export interface ChangeScorer extends Scorer {
 
 export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
   const earlyMs = opts.earlyMs ?? 150;
+  const latencyMs = opts.latencyMs ?? 0;
   const windowMs = ((opts.windowBeats ?? 1) * 60_000) / opts.bpm;
   const records: ChangeRecord[] = [];
   const pending: { midi: number; at: number }[] = [];
@@ -124,7 +127,7 @@ export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
     const tone = chordToneOfPitch(opts.chords[r.index] as ChordSpec, midi);
     r.midi = midi;
     r.tone = tone;
-    r.offsetMs = at - r.at;
+    r.offsetMs = at - latencyMs - r.at;
     const before = [...notes].reverse().find((n) => n.at < at);
     const gap = before ? Math.abs(before.midi - midi) : 0;
     r.approach = !before ? 'none' : gap === 0 ? 'same' : gap <= 2 ? 'step' : 'leap';
@@ -171,7 +174,7 @@ export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
         betweenInKey: opts.key ? 0 : null,
       };
       // A note just before the change was aimed at it.
-      const early = pending.find((n) => n.at >= at - earlyMs);
+      const early = pending.find((n) => n.at - latencyMs >= at - earlyMs);
       if (open) closeBetween(open, early ? early.at : at);
       if (early) settle(r, early.midi, early.at);
       pending.length = 0;
@@ -183,7 +186,9 @@ export function createChangeScorer(opts: ChangeScorerOptions): ChangeScorer {
       pending.push({ midi, at });
       if (pending.length > 8) pending.shift();
       if (!open || open.outcome !== 'silent') return;
-      if (at >= open.at && at <= open.at + windowMs) settle(open, midi, at);
+      if (at - latencyMs >= open.at - earlyMs && at - latencyMs <= open.at + windowMs) {
+        settle(open, midi, at);
+      }
     },
     result() {
       if (open) closeBetween(open, Number.POSITIVE_INFINITY);

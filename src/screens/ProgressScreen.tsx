@@ -22,13 +22,18 @@ import {
   transfer,
 } from '../core/metrics';
 import { SKILLS, skillById, skillTitle } from '../drills/registry';
-import { pooledExperiments, summariseParticipant, type ParticipantSummary } from '../core/cohort';
+import {
+  cohortReport,
+  pooledExperiments,
+  summariseParticipant,
+  type ParticipantSummary,
+} from '../core/cohort';
 import type { TrialEvent } from '../core/types';
 import { parseB1Item } from '../drills/b1-scale-degree/logic';
 import styles from '../styles/app.module.css';
 
-function download(name: string, text: string) {
-  const blob = new Blob([text], { type: 'application/json' });
+function download(name: string, text: string, type = 'application/json') {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -438,6 +443,21 @@ function CohortView({
             ))}
           </tbody>
         </table>
+      </div>
+      <div className={styles.row}>
+        <button
+          type="button"
+          className={styles.button}
+          onClick={() =>
+            download(
+              'glead-pilot-report.md',
+              cohortReport(rows, pooled, skillTitle, new Date().toISOString()),
+              'text/markdown',
+            )
+          }
+        >
+          {t('progress.report')}
+        </button>
       </div>
       <h3>{t('progress.pooled')}</h3>
       <div className={styles.scroll}>

@@ -13,6 +13,7 @@ import {
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { createBackingLoop } from '../audio/backing-loop';
 import { LOOP_PROGRESSIONS, LOOP_TEMPOS, loopProgression } from '../audio/loops';
+import { ENGINE_CONFIG } from '../vendor/fretfree/engine/config';
 import { useApp } from '../core/app-context';
 import { useT } from '../core/i18n';
 import { newId } from '../core/events/ids';
@@ -167,7 +168,16 @@ export function ChangesScreen({ preset = null }: { preset?: ChangesPreset | null
       : chosenKey;
     setTakeKey(k);
     const loopChords = progressionChords(k, progression.numerals);
-    const scorer = createChangeScorer({ chords: loopChords, rung, bpm, key: k });
+    const scorer = createChangeScorer({
+      chords: loopChords,
+      rung,
+      bpm,
+      key: k,
+      latencyMs:
+        mic && micState === 'running'
+          ? (settings.micLatencyMs ?? ENGINE_CONFIG.playNote.micLatencyMs)
+          : 0,
+    });
     scorer.start();
     scorerRef.current = scorer;
     passRef.current = -1;

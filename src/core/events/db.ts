@@ -19,6 +19,8 @@ export interface Settings {
   labelScheme: LabelScheme;
   /** Mic answers below this confidence ask the learner to confirm by tap. Provisional until R2. */
   confirmBelow: number;
+  /** Detector latency measured by the Mic lab on this device, ms; null means the vendored default. */
+  micLatencyMs: number | null;
   /** Sessions per week the learner aims for; 0 is off. Never changes what is scheduled (PRD D7). */
   weeklyGoal: number;
   /** A silent beat between hearing and playing (PRD B6). */
@@ -46,6 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accidentalPref: 'sharp',
   labelScheme: 'numbers',
   confirmBelow: 0.6,
+  micLatencyMs: null,
   weeklyGoal: 0,
   imagineFirst: false,
   callResponse: true,

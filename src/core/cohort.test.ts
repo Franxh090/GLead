@@ -68,3 +68,23 @@ describe('cohort view', () => {
     expect(pooledExperiments([])).toHaveLength(4);
   });
 });
+
+describe('cohort report', () => {
+  it('writes the Markdown report with counts beside every percentage', async () => {
+    const { cohortReport, pooledExperiments, summariseParticipant } = await import('./cohort');
+    const rows = [
+      summariseParticipant('p1.json', [t({ correct: true }), t({ correct: false })], ['B1.major']),
+    ];
+    const md = cohortReport(
+      rows,
+      pooledExperiments([{ trials: [t({})] }]),
+      (id) => id,
+      '2026-11-01',
+    );
+    expect(md).toContain('# GLead pilot report');
+    expect(md).toContain('| p1.json | 2 | 1 |');
+    expect(md).toContain(
+      '| Does a silent beat to imagine the note first help? | Play at once | 100% | 1 | 1 |',
+    );
+  });
+});

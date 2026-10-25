@@ -216,7 +216,9 @@ export function createSessionRunner(deps: RunnerDeps): SessionRunner {
     if (!drill || !entry || !key) return;
     const check = drill.check(prompt, answer);
     const raw = Math.max(0, event.at - listenFrom);
-    const { micLatencyMs, playAllowanceMs } = ENGINE_CONFIG.playNote;
+    // The device's measured latency (Mic lab) when it has one, else the vendored estimate.
+    const micLatencyMs = deps.settings.micLatencyMs ?? ENGINE_CONFIG.playNote.micLatencyMs;
+    const { playAllowanceMs } = ENGINE_CONFIG.playNote;
     const responseMs = mode === 'tap' ? raw : Math.max(0, raw - micLatencyMs - playAllowanceMs);
     const rating: Grade = gradeAnswer(
       { correct: check.correct, responseMs, hintUsed: false },

@@ -6,6 +6,7 @@ import { LANGUAGES, useT } from '../core/i18n';
 import styles from '../styles/app.module.css';
 import { TUNINGS } from '../core/tunings';
 import { persistenceStatus, requestPersistence, type Persistence } from '../core/storage';
+import { ENGINE_CONFIG } from '../vendor/fretfree/engine/config';
 
 function Toggle({
   label,
@@ -208,6 +209,36 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
         value={s.soundOn}
         onChange={(v) => void app.settings.update({ soundOn: v })}
       />
+      <div className={styles.field}>
+        <span>{t('settings.volume', { pct: Math.round(s.volume * 100) })}</span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={s.volume}
+          aria-label={t('settings.volumeAria')}
+          onChange={(e) => void app.settings.update({ volume: Number(e.target.value) })}
+        />
+      </div>
+      {s.micEnabled && (
+        <div className={styles.field}>
+          <span className={styles.muted}>
+            {s.micLatencyMs === null
+              ? t('settings.latencyDefault', { n: ENGINE_CONFIG.playNote.micLatencyMs })
+              : t('settings.latencyMeasured', { n: s.micLatencyMs })}
+          </span>
+          {s.micLatencyMs !== null && (
+            <button
+              type="button"
+              className={styles.button}
+              onClick={() => void app.settings.update({ micLatencyMs: null })}
+            >
+              {t('settings.latencyReset')}
+            </button>
+          )}
+        </div>
+      )}
       <div className={styles.field}>
         <span>
           {t('settings.goal', {

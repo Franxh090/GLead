@@ -8,8 +8,9 @@
  * skills, and the measurement plan (R5) wants a schedule it can describe in a
  * sentence. Deterministic given `now` and `rng`.
  */
+import { ENGINE_CONFIG } from '../../vendor/fretfree/engine/config';
 import type { Scheduler } from '../../vendor/fretfree/engine/scheduler';
-import type { CardRecord, Item } from '../types';
+import type { CardRecord, Item, TrialEvent } from '../types';
 import { pick } from '../keys';
 
 export type EntryKind = 'review' | 'new' | 'retry';
@@ -48,6 +49,47 @@ export interface PlanInput {
   rng: () => number;
   /** Blocked practice (the control arm): skills one after another, not interleaved. */
   blocked?: boolean;
+  /** Recent accuracy per skill (`recentBySkill`): the band holds or widens what is new. */
+  recent?: Record<string, { trials: number; correct: number }>;
+}
+
+// --- The adaptive band (PRD B7: accuracy held at about 80–90%) ------------
+
+export type BandDecision = 'hold' | 'steady' | 'widen';
+
+/**
+ * What recent accuracy says about a skill: `hold` (below the band: reviews
+ * only, nothing new until it recovers), `steady`, or `widen` (above it: one
+ * more new item this session). Fewer than `minAnswers` recent trials decide
+ * nothing. Thresholds are FretFree's adaptive band (`ENGINE_CONFIG.adaptive`).
+ */
+export function bandDecision(
+  recent: { trials: number; correct: number } | null | undefined,
+  cfg = ENGINE_CONFIG.adaptive,
+): BandDecision {
+  if (!recent || recent.trials < cfg.minAnswers) return 'steady';
+  const acc = recent.correct / recent.trials;
+  if (acc < cfg.narrowBelow) return 'hold';
+  if (acc > cfg.widenAbove) return 'widen';
+  return 'steady';
+}
+
+/** The last `window` practice trials of each skill, tallied, from the log. */
+export function recentBySkill(
+  trials: readonly TrialEvent[],
+  skillIds: readonly string[],
+  window = ENGINE_CONFIG.adaptive.window,
+): Record<string, { trials: number; correct: number }> {
+  const out: Record<string, { trials: number; correct: number }> = {};
+  for (const id of skillIds) {
+    const mine = trials
+      .filter(
+        (t) => t.skillId === id && (t.purpose ?? 'practice') === 'practice' && t.retest === 'none',
+      )
+      .slice(-window);
+    out[id] = { trials: mine.length, correct: mine.filter((t) => t.correct).length };
+  }
+  return out;
 }
 
 /** Shuffle in place (Fisher–Yates) with the given rng. */
@@ -108,9 +150,12 @@ export function planSession(input: PlanInput): PlanEntry[] {
     kind: 'review',
   }));
 
-  const unknown = items.filter((i) => !known.has(i.id));
+  // The band: a skill below it gets no new items; one above it gets one more.
+  const decision = (skillId: string) => bandDecision(input.recent?.[skillId]);
+  const unknown = items.filter((i) => !known.has(i.id) && decision(i.skillId) !== 'hold');
   const fresh = blocked ? groupBySkill(unknown) : roundRobinBySkill(unknown);
-  const cap = Math.min(newItemCap(minutes), fresh.length);
+  const widened = new Set(fresh.map((i) => i.skillId).filter((s) => decision(s) === 'widen')).size;
+  const cap = Math.min(newItemCap(minutes) + widened, fresh.length);
   const chosen = fresh.slice(0, cap);
   const news: PlanEntry[] = [];
   for (let b = 0; b < chosen.length; b += PLAN.newBlockSize) {
@@ -232,6 +277,8 @@ export interface ShapePhrases {
   reviews(n: number): string;
   concepts(titles: readonly string[]): string;
   playAlong(minutes: number): string;
+  /** Skills the band is holding with reviews only. */
+  held?(titles: readonly string[]): string;
   short: string;
   separator: string;
 }
@@ -240,6 +287,7 @@ export const ENGLISH_PHRASES: ShapePhrases = {
   reviews: (n) => `${n} review${n === 1 ? '' : 's'} to warm up`,
   concepts: (titles) => `new: ${titles.join(' and ')}`,
   playAlong: (m) => `then ${m} minutes over a loop`,
+  held: (titles) => `holding ${titles.join(' and ')} steady with reviews`,
   short: 'A short pass over what you know.',
   separator: ', ',
 };
@@ -251,6 +299,8 @@ export function sessionShape(
   phrases: ShapePhrases = ENGLISH_PHRASES,
   /** False without a guitar: no play-along to hand over to. */
   allowPlayAlong = true,
+  /** Skills the band held back this session (`bandDecision` said `hold`). */
+  held: readonly string[] = [],
 ): SessionShape {
   const reviews = plan.filter((e) => e.kind === 'review').length;
   const concepts = [...new Set(plan.filter((e) => e.kind === 'new').map((e) => e.item.skillId))];
@@ -258,6 +308,7 @@ export function sessionShape(
   const parts: string[] = [];
   if (reviews > 0) parts.push(phrases.reviews(reviews));
   if (concepts.length > 0) parts.push(phrases.concepts(concepts.map(titleOf)));
+  if (held.length > 0 && phrases.held) parts.push(phrases.held(held.map(titleOf)));
   if (playAlong) parts.push(phrases.playAlong(playAlong.minutes));
   return {
     goal: parts.length ? parts.join(phrases.separator) + '.' : phrases.short,

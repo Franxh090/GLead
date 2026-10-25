@@ -1,17 +1,17 @@
 # GLead handoff
 
-**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** after Sprints 8, 9 and 10 (24 Oct) and Sprints 11 and 12 (25 Oct). **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 12 is on `main` at `github.com/Franxh090/GLead`; nothing is uncommitted.
+**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** after Sprints 8, 9 and 10 (24 Oct) and Sprints 11 to 13 (25 Oct). **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 12 is on `main` at `github.com/Franxh090/GLead`; Sprint 13 is on the branch `claude/wizardly-fermi-6t4qbo`, ready to merge.
 
 ## 1. Where things stand
 
 - **Built:** every PRD P0 and P1 item (chord hearing is experimental and off by default) and curriculum levels 1–6. Seven drills (B1–B5, B8, B9 progressions by ear) plus C4 call and response after each melody, Songs by ear (four tunes, phrase by phrase, in a rotating key), Changes (play-along scoring with approach and passing-note measures and a graded Phrases rung), Keys (A1, A2, A4, Find my key), Loops, placement, retests, experiment arms, dashboard with a cohort view for the pilot, Mic lab, Spanish on every screen, eight tunings. `README.md` §Status lists it all.
-- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 726 unit tests, build) is green. `pnpm e2e` runs 45 Playwright specs (42 desktop, 3 at iPhone 15 width) in about three minutes; all pass. Screens have RTL tests now (`src/test/render.tsx` renders one on a fresh database).
+- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 732 unit tests, build) is green. `pnpm e2e` runs 47 Playwright specs (44 desktop, 3 at iPhone 15 width) in about three minutes; all pass. Screens have RTL tests now (`src/test/render.tsx` renders one on a fresh database).
 - **Data safety:** Progress → Restore from an export merges a file in by id; Settings shows what the device holds and whether the browser promised to keep it. The ear-only skills (B1, B2, B3, B5, B8, B9) can be studied without a guitar; B4, Changes, C4, Songs, Find my key and the Mic lab need one, and Today says so.
 - **Deployment:** `.github/workflows/pages.yml` builds `main` and publishes `dist` to GitHub Pages with base path `/GLead/`. Pages is enabled (Frank, 24 Oct) and **run 5 deployed**: the site is live at `https://franxh090.github.io/GLead/`.
 
 ## 2. The next things Frank must do
 
-On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
+Merge Sprint 13 into `main` (the deploy follows by itself). On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
 
 If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnpm build` and output `dist`, with no base path at a root domain (`GLEAD_BASE` unset).
 
@@ -24,6 +24,7 @@ If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnp
 | OpenEar's exercise designs and cadence recipe re-implemented on tonal, not ported | R1 §5 |
 | Licences: all MIT/Apache-2.0; BetterChord weights off-limits; "GLead" has only minor collisions | `research/R3-licences.md` |
 | Cards are one per fact (degree, numeral, chord tone); the key rotates per prompt; six practised and six held-out keys per mode | `src/core/keys.ts` |
+| The B7 band acts on what a session deals (hold under 75%, widen over 92%, FretFree's thresholds), not on a drill's scope level | `src/core/scheduling/plan.ts` `bandDecision` |
 | Placement and retest sessions measure only (no retries, no card updates); a skill rests while a retest is pending | `src/core/session/runner.ts`, `src/core/scheduling/retests.ts` |
 | Experiment arms dealt once per learner; imagine-first and feedback variant per trial; schedule alternates by week; all on every trial | `src/core/experiments.ts`, `research/R5-measurement.md` |
 | Trial log fields and musical names stay in English; UI goes through `t()` | `src/core/i18n.ts`, `CLAUDE.md` |

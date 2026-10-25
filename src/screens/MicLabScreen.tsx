@@ -435,6 +435,20 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                   {t('miclab.use', { n: summary.suggestedConfirmBelow })}
                 </button>
               )}
+            {summary.medianLatencyMs !== null &&
+              Math.round(summary.medianLatencyMs) !== settings.micLatencyMs && (
+                <button
+                  type="button"
+                  className={styles.button}
+                  onClick={() =>
+                    void app.settings.update({
+                      micLatencyMs: Math.round(summary.medianLatencyMs as number),
+                    })
+                  }
+                >
+                  {t('miclab.useLatency', { n: Math.round(summary.medianLatencyMs) })}
+                </button>
+              )}
             <button type="button" className={styles.button} onClick={onExit}>
               {t('miclab.backSettings')}
             </button>

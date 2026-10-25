@@ -68,6 +68,42 @@ export interface PooledComparison {
   arms: PooledArm[];
 }
 
+/** The pilot report as Markdown (R5 §4 "what we report"): one row per participant, then the pooled arms, counts beside every percentage. */
+export function cohortReport(
+  rows: readonly ParticipantSummary[],
+  pooled: readonly PooledComparison[],
+  titleOf: (skillId: string) => string,
+  exportedAt: string,
+): string {
+  const pct = (t: Tally) =>
+    t.trials ? `${Math.round((100 * t.correct) / t.trials)}% (${t.trials})` : '—';
+  const lines = [
+    `# GLead pilot report`,
+    '',
+    `Generated ${exportedAt} from ${rows.length} export${rows.length === 1 ? '' : 's'}. Percentages carry their trial counts; n is small.`,
+    '',
+    '| Participant | Trials | Sessions | Placement | Skills at criterion | 7d | 30d | Transfer | Hit rate | Confirm |',
+    '|---|---|---|---|---|---|---|---|---|---|',
+    ...rows.map(
+      (r) =>
+        `| ${r.label} | ${r.trials} | ${r.sessions} | ${pct(r.placement)} | ${r.skillsAtCriterion.map(titleOf).join(', ') || '—'} | ${pct(r.retest7)} | ${pct(r.retest30)} | ${pct(r.transfer)} | ${pct(r.hits)} | ${r.confirmShare === null ? '—' : `${Math.round(r.confirmShare * 100)}%`} |`,
+    ),
+    '',
+    '## Experiments pooled across participants',
+    '',
+    '| Question | Arm | Accuracy | Trials | Participants |',
+    '|---|---|---|---|---|',
+    ...pooled.flatMap((e) =>
+      e.arms.map(
+        (a) =>
+          `| ${e.question} | ${a.label} | ${a.tally.trials ? `${Math.round((100 * a.tally.correct) / a.tally.trials)}%` : '—'} | ${a.tally.trials} | ${a.participants} |`,
+      ),
+    ),
+    '',
+  ];
+  return lines.join('\n');
+}
+
 /** The built-in experiments summed over participants (R5 §3: within-person designs, pooled with counts). */
 export function pooledExperiments(
   cohort: readonly { trials: readonly TrialEvent[] }[],

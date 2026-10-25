@@ -21,7 +21,7 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprints 0–12 of the plan in `docs/implementation-plan.md` are built, apart from
+Sprints 0–13 of the plan in `docs/implementation-plan.md` are built, apart from
 the parts only people can do: the four-week pilot, the teacher interviews and
 the device measurement (R2), for which the app carries its own Mic lab. What
 works today:
@@ -39,7 +39,9 @@ works today:
   in key and whether you left the pentatonic box, logged as a take and never
   graded.
 - **Sessions with a shape**: the goal up front, reviews first, then new
-  material, then a scored play-along over a loop (**Changes**) whose targets
+  material dealt by the adaptive band (a skill under 75% recent accuracy gets
+  reviews only until it recovers; one over 92% gets an extra new item, and the
+  goal says which is held), then a scored play-along over a loop (**Changes**) whose targets
   hide once two takes land 80%; every landing records how it was reached and
   the passing notes before the next change, and the **Phrases** rung counts a
   chord tone only when a step leads into it.
@@ -60,7 +62,8 @@ works today:
   (imagine-first and feedback variant per trial, label scheme per learner,
   interleaved and blocked weeks), all on every trial; a weekly goal that only
   counts; the **Mic lab** (R2 in five minutes, with a suggested confirm
-  threshold, and a strummed-chord part when chord hearing is on).
+  threshold and a measured latency that the drills and Changes then use, and a
+  strummed-chord part when chord hearing is on).
 - **Progress** leads with delayed retests, transfer and the chord-tone hit
   rate, then a per-skill report and the experiment arms, and loads another
   learner's export read-only, or several at once as a cohort with the
@@ -74,8 +77,8 @@ works today:
   tapping) from the ear-to-hand ones, and a "Guitar: not now" switch runs a
   tap-only session with no mic, no play-along and no call and response. The log
   keeps tapped and played answers apart.
-- 726 unit tests (including screen tests for Today, Settings and Progress) and
-  45 Playwright specs (`pnpm e2e`) pass.
+- 732 unit tests (including screen tests for Today, Settings and Progress) and
+  47 Playwright specs (`pnpm e2e`) pass.
 
 Not yet: real-song clips, sync. Chord hearing has not met a real guitar.
 

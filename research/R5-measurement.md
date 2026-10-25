@@ -43,6 +43,7 @@ All per learner, per skill, computed in `src/core/metrics.ts`.
 | **Detection reliability** | *Proxy until R2:* share of mic answers the learner had to confirm | `confirmShare(trials)`; R2 supplies the fixed-set numbers |
 | **Play-by-ear time** | *Proposed:* from B4's first note heard to the sequence complete; `responseMs` already holds it for B4 trials |
 | **Step approach** | Share of play-along landings reached by step (one or two semitones from the note before), over landings that had a note before them (Sprint 9; PRD C1 passing notes) | `stepApproachRate(trials)` |
+| **Mic latency** | The Mic lab's median click-to-note offset, adoptable as this device's latency; the runner and the Changes scorer then use it instead of the vendored 150 ms (Sprint 13) | `Settings.micLatencyMs` |
 | **Passing notes in key** | Of the notes played between one landing and the next change, the share that sat in the key (Sprint 9) | `passingNotes(trials)` |
 
 Baselines: the placement session (`purpose = placement`) gives per-skill accuracy before any practice (`placementBaseline`).
