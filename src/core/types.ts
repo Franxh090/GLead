@@ -43,6 +43,8 @@ export interface InputEvent {
   degree?: number;
   /** A tapped neck cell. */
   position?: Position;
+  /** A strummed chord the chord detector heard (Sprint 11), when chord hearing is on. */
+  chord?: { root: string; quality: 'major' | 'minor' };
   /** 0–1. A tap is 1; a played note's comes from the detector (`core/input/confidence.ts`). */
   confidence: number;
   /** Cents off the nearest note, for a played note. */

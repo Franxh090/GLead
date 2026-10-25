@@ -12,8 +12,10 @@
 import { pitchMatches } from '../../vendor/fretfree/mic/tracker';
 import {
   chordFromNumeral,
+  chordSymbol,
   diatonicChords,
   keyName,
+  sameChord,
   midiAt,
   midiToFretNote,
   positionsOfMidi,
@@ -124,6 +126,8 @@ export interface B2Prompt {
 export interface B2Answer {
   numeral?: string;
   midi?: number;
+  /** A strummed chord, when chord hearing is on. */
+  chord?: { root: string; quality: 'major' | 'minor' };
 }
 
 export function b2MakePrompt(item: Item, ctx: DrillContext): B2Prompt {
@@ -154,6 +158,7 @@ export function b2Audio(prompt: B2Prompt): AudioStep[] {
 }
 
 export function b2AnswerFromInput(prompt: B2Prompt, event: InputEvent): B2Answer | null {
+  if (event.chord) return { chord: event.chord };
   if (event.kind === 'play' && event.midi !== undefined) return { midi: event.midi };
   if (event.kind === 'tap') {
     if (event.position) return { midi: midiAt(event.position, prompt.tuning) };
@@ -169,12 +174,28 @@ export function b2NumeralOfPitch(prompt: B2Prompt, midi: number): string | null 
   return hit ? hit.roman : null;
 }
 
+/** The numeral of a strummed chord in the key, or null when no chord of the key sounds like it. */
+export function b2NumeralOfChord(
+  prompt: B2Prompt,
+  chord: { root: string; quality: 'major' | 'minor' },
+): string | null {
+  return diatonicChords(prompt.key).find((c) => sameChord(c, chord))?.roman ?? null;
+}
+
 export function b2Expected(prompt: B2Prompt): string {
   return `${prompt.numeral} (${displayPc(prompt.chord.symbol)})`;
 }
 
 export function b2Check(prompt: B2Prompt, answer: B2Answer): Check {
   const expected = b2Expected(prompt);
+  if (answer.chord) {
+    const numeral = b2NumeralOfChord(prompt, answer.chord);
+    const correct = numeral === prompt.numeral;
+    const given = `${displayPc(chordSymbol(answer.chord))} (${numeral ? `the ${numeral} chord` : 'not a chord of the key'})`;
+    return correct
+      ? { correct, expected, given }
+      : { correct, expected, given, ...(numeral ? { confusedWith: numeral } : {}) };
+  }
   if (answer.numeral !== undefined) {
     const correct = answer.numeral === prompt.numeral;
     return correct
@@ -194,6 +215,7 @@ export function b2Check(prompt: B2Prompt, answer: B2Answer): Check {
 }
 
 export function b2DescribeAnswer(answer: B2Answer): string {
+  if (answer.chord) return displayPc(chordSymbol(answer.chord));
   if (answer.numeral !== undefined) return answer.numeral;
   if (answer.midi !== undefined) return displayPc(midiToFretNote(answer.midi).name);
   return '—';
@@ -220,7 +242,13 @@ export function b2FeedbackAudio(prompt: B2Prompt, fb: Feedback<B2Answer>): Audio
     { type: 'strum', notes: prompt.notes, durationS: 1.8 },
     { type: 'rest', ms: 300 },
   ];
-  if (fb.answer.numeral !== undefined) {
+  if (fb.answer.chord) {
+    steps.push({
+      type: 'strum',
+      notes: voiceChord(fb.answer.chord, prompt.accidentalPref),
+      durationS: 1.8,
+    });
+  } else if (fb.answer.numeral !== undefined) {
     const other = chordFromNumeral(prompt.key, fb.answer.numeral);
     steps.push({ type: 'strum', notes: voiceChord(other, prompt.accidentalPref), durationS: 1.8 });
   } else if (fb.answer.midi !== undefined) {

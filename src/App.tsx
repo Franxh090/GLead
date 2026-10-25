@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useT } from './core/i18n';
 import { ChangesScreen } from './screens/ChangesScreen';
 import { KeysScreen } from './screens/KeysScreen';
@@ -19,6 +20,13 @@ export function App() {
   const [screen, setScreen] = useState<Screen>('today');
   const [session, setSession] = useState<SessionOptions | null>(null);
   const [preset, setPreset] = useState<PlayAlongPreset | null>(null);
+  // The service worker (vite-plugin-pwa, `registerType: 'prompt'`): offline after the
+  // first visit, and a new build waits for the learner's say-so, never mid-session.
+  const {
+    offlineReady: [offlineReady, setOfflineReady],
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
 
   const start = (options: SessionOptions) => {
     setSession(options);
@@ -68,6 +76,30 @@ export function App() {
         {screen === 'settings' && <SettingsScreen onMicLab={() => setScreen('miclab')} />}
         {screen === 'miclab' && <MicLabScreen onExit={() => setScreen('settings')} />}
       </main>
+      {(offlineReady || needRefresh) && (
+        <div className={styles.status} role="status" aria-live="polite">
+          {needRefresh ? t('pwa.update') : t('pwa.ready')}{' '}
+          {needRefresh && (
+            <button
+              type="button"
+              className={`${styles.button} ${styles.primary}`}
+              onClick={() => void updateServiceWorker(true)}
+            >
+              {t('pwa.reload')}
+            </button>
+          )}
+          <button
+            type="button"
+            className={styles.button}
+            onClick={() => {
+              setOfflineReady(false);
+              setNeedRefresh(false);
+            }}
+          >
+            {t('pwa.dismiss')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

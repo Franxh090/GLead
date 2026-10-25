@@ -28,7 +28,11 @@ export function B2View({
     feedback,
   );
   return (
-    <div className={styles.card} data-target-midi={prompt.rootMidi}>
+    <div
+      className={styles.card}
+      data-target-midi={prompt.rootMidi}
+      data-target-chord={prompt.chord.symbol}
+    >
       <p>{t('b2.question', { key: keyName(prompt.key) })}</p>
       <ReplayRow listening={canAnswer} onReplay={onReplay} />
       <ConfirmPanel pending={pending} onConfirm={onConfirm} />

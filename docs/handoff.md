@@ -1,16 +1,16 @@
 # GLead handoff
 
-**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** the same day after Sprints 8, 9 and 10. **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 10 is on `main` at `github.com/Franxh090/GLead`; nothing is uncommitted.
+**Written:** 24 Oct 2026, end of the first build session (Sprints 0–7 plus the iPhone pass); **updated** after Sprints 8, 9 and 10 (24 Oct) and Sprint 11 (25 Oct). **Read this first in a new session**, then `CLAUDE.md`, then `docs/implementation-plan.md`. Everything through Sprint 10 is on `main` at `github.com/Franxh090/GLead`; Sprint 11 is on the branch `claude/wizardly-fermi-6t4qbo`, ready to merge.
 
 ## 1. Where things stand
 
-- **Built:** every PRD P0 item and the P1 list except chord detection, and curriculum levels 1–6. Seven drills (B1–B5, B8, B9 progressions by ear) plus C4 call and response after each melody, Songs by ear (four tunes, phrase by phrase, in a rotating key), Changes (play-along scoring with approach and passing-note measures and a graded Phrases rung), Keys (A1, A2, A4, Find my key), Loops, placement, retests, experiment arms, dashboard with a cohort view for the pilot, Mic lab, Spanish on every screen, eight tunings. `README.md` §Status lists it all.
-- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 714 unit tests, build) is green. `pnpm e2e` runs 39 Playwright specs (36 desktop, 3 at iPhone 15 width) in about two and a half minutes; all pass.
+- **Built:** every PRD P0 and P1 item (chord hearing is experimental and off by default) and curriculum levels 1–6. Seven drills (B1–B5, B8, B9 progressions by ear) plus C4 call and response after each melody, Songs by ear (four tunes, phrase by phrase, in a rotating key), Changes (play-along scoring with approach and passing-note measures and a graded Phrases rung), Keys (A1, A2, A4, Find my key), Loops, placement, retests, experiment arms, dashboard with a cohort view for the pilot, Mic lab, Spanish on every screen, eight tunings. `README.md` §Status lists it all.
+- **Quality gate:** `pnpm verify` (typecheck, lint, prettier, 718 unit tests, build) is green. `pnpm e2e` runs 42 Playwright specs (39 desktop, 3 at iPhone 15 width) in about three minutes; all pass.
 - **Deployment:** `.github/workflows/pages.yml` builds `main` and publishes `dist` to GitHub Pages with base path `/GLead/`. Pages is enabled (Frank, 24 Oct) and **run 5 deployed**: the site is live at `https://franxh090.github.io/GLead/`.
 
 ## 2. The next things Frank must do
 
-On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
+Merge Sprint 11 into `main` (the deploy follows by itself). On the iPhone: Safari → Share → Add to Home Screen → Settings → mic on → Run the Mic lab. `README.md` §Install it on an iPhone has the steps.
 
 If Pages is not wanted, Netlify or Cloudflare Pages work with build command `pnpm build` and output `dist`, with no base path at a root domain (`GLEAD_BASE` unset).
 
@@ -54,6 +54,7 @@ See `CLAUDE.md` §Layout. The pure cores to read first: `src/core/session/runner
 ## 7. Candidate next steps, in the order I would take them
 
 1. Do the Mic lab on the iPhone (Frank). Fix whatever iOS Safari shows; nothing has run on a real device yet. The C4 response panel and the new tunings have only run in Chromium.
-2. Interleaved-vs-blocked results will take weeks; nothing to build there yet.
-3. After the pilot: fixes from exports and interviews (the cohort view on Progress reads several exports at once). The curriculum's six levels are covered in software; what the pilot says about them decides what comes next. More songs are cheap to add: `src/songs/catalogue.ts`, in degrees, traditional or public-domain only, and the catalogue test checks the bars add up.
-4. Chord detection (P1) is the one PRD item left; it needs a polyphonic detector, which pitchy is not.
+2. Chord hearing has only met synthetic spectra and the fake detector. Turn it on in Settings, run the Mic lab's chord part with a real guitar, and read the "Strummed chords named right" row; below about 80% it stays experimental, and the thresholds in `src/core/input/chroma.ts` (`CHROMA`) are the knobs. Appendix open question 3 (how good must it be before it replaces tap-to-confirm) is answered by that number.
+3. Interleaved-vs-blocked results will take weeks; nothing to build there yet.
+4. After the pilot: fixes from exports and interviews (the cohort view on Progress reads several exports at once). The curriculum's six levels are covered in software; what the pilot says about them decides what comes next. More songs are cheap to add: `src/songs/catalogue.ts`, in degrees, traditional or public-domain only, and the catalogue test checks the bars add up.
+5. Real-song clips and sync are the PRD items left; both were deferred on purpose (rights; local-first).

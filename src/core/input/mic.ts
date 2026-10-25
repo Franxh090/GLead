@@ -11,6 +11,7 @@
  */
 import type { PitchSource, StableNote } from '../../vendor/fretfree/mic/types';
 import type { InputAdapter, InputEvent, InputState } from '../types';
+import type { ChordDetector } from './chord-detector';
 import { confidenceFromCents } from './confidence';
 
 export interface MicInputOptions {
@@ -18,6 +19,11 @@ export interface MicInputOptions {
   /** Notes above this MIDI number are ignored (a guitar's highest fret is about E6). */
   maxMidi?: number;
   minMidi?: number;
+  /** The chord detector, started with the mic when `chordsEnabled()` says so; its failure never fails the mic. */
+  chords?: ChordDetector | null;
+  chordsEnabled?: () => boolean;
+  /** Runs after the source stops: release the shared stream. */
+  onStop?: () => void;
 }
 
 export function createMicInput(source: PitchSource, opts: MicInputOptions = {}): InputAdapter {
@@ -41,6 +47,15 @@ export function createMicInput(source: PitchSource, opts: MicInputOptions = {}):
     listeners.forEach((l) => l(e));
   });
   source.onStateChange((s) => stateListeners.forEach((l) => l(s)));
+  opts.chords?.onChord((c) => {
+    const e: InputEvent = {
+      kind: 'play',
+      chord: { root: c.root, quality: c.quality },
+      confidence: c.confidence,
+      at: c.at,
+    };
+    listeners.forEach((l) => l(e));
+  });
 
   return {
     id: 'mic',
@@ -50,8 +65,17 @@ export function createMicInput(source: PitchSource, opts: MicInputOptions = {}):
     get error() {
       return source.error;
     },
-    start: () => source.start(),
-    stop: () => source.stop(),
+    async start() {
+      await source.start();
+      if (opts.chords && source.state === 'running' && (opts.chordsEnabled?.() ?? true)) {
+        await opts.chords.start().catch(() => undefined);
+      }
+    },
+    stop() {
+      source.stop();
+      opts.chords?.stop();
+      opts.onStop?.();
+    },
     onEvent(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);

@@ -21,7 +21,7 @@ transfer to unseen keys, computed from the learner's own trial log.
 
 ## Status
 
-Sprints 0–10 of the plan in `docs/implementation-plan.md` are built, apart from
+Sprints 0–11 of the plan in `docs/implementation-plan.md` are built, apart from
 the parts only people can do: the four-week pilot, the teacher interviews and
 the device measurement (R2), for which the app carries its own Mic lab. What
 works today:
@@ -31,7 +31,10 @@ works today:
   through the microphone or by tapping; B8 intervals by ear with song hints;
   and B9 progressions by ear, three or four chords named by numeral in order
   or by playing their roots. Feedback on the neck, a confirm prompt when the detector is unsure,
-  misses that come back, FSRS scheduling per item. After a copied melody, **call
+  misses that come back, FSRS scheduling per item. With **chord hearing** on
+  (experimental, in Settings), a strummed chord answers the chord drills: chroma
+  templates for the 24 major and minor triads, with a confidence the confirm
+  gate uses like a note's. After a copied melody, **call
   and response** (C4): answer with a phrase of your own, see which notes stayed
   in key and whether you left the pentatonic box, logged as a take and never
   graded.
@@ -57,15 +60,17 @@ works today:
   (imagine-first and feedback variant per trial, label scheme per learner,
   interleaved and blocked weeks), all on every trial; a weekly goal that only
   counts; the **Mic lab** (R2 in five minutes, with a suggested confirm
-  threshold).
+  threshold, and a strummed-chord part when chord hearing is on).
 - **Progress** leads with delayed retests, transfer and the chord-tone hit
   rate, then a per-skill report and the experiment arms, and loads another
   learner's export read-only, or several at once as a cohort with the
   experiment arms pooled. `research/R5-measurement.md`,
   `docs/pilot-kit.md` and `docs/teacher-interview-guide.md` carry the pilot.
-- 714 unit tests and 39 Playwright specs (`pnpm e2e`) pass.
+- Installed from Safari or Chrome it works offline, and a new version waits for
+  a tap on Reload rather than interrupting a session.
+- 718 unit tests and 42 Playwright specs (`pnpm e2e`) pass.
 
-Not yet: chord detection, real-song clips, sync.
+Not yet: real-song clips, sync. Chord hearing has not met a real guitar.
 
 ## Install it on an iPhone
 

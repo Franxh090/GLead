@@ -7,6 +7,8 @@
  *   heard, how sure the detector was, and whether it matched.
  * - **Wrong notes**: 8 prompts to play the fret *above* the named one, to
  *   see whether a wrong play is accepted as the named note.
+ * - **Chords** (when chord hearing is on): 8 open chords to strum; records
+ *   what the chord detector named and how sure it was.
  * - **Latency**: 12 clicks at 60 bpm; pluck on each. The offset from click to
  *   stable note, over many plucks, is the detector's latency plus the
  *   player's timing; the median is what matters.
@@ -15,14 +17,17 @@
  */
 import {
   STANDARD_TUNING,
+  chordSymbol,
   midiAt,
   midiToFretNote,
+  sameChord,
+  type ChordSpec,
   type Position,
   type Tuning,
 } from '../vendor/fretfree/theory';
 import { pitchMatches } from '../vendor/fretfree/mic/tracker';
 
-export type MicLabPart = 'notes' | 'wrong' | 'latency';
+export type MicLabPart = 'notes' | 'wrong' | 'chords' | 'latency';
 
 export interface MicLabPrompt {
   part: MicLabPart;
@@ -49,6 +54,34 @@ export const WRONG_SET: readonly Position[] = [
   { string: 3, fret: 9 },
 ];
 export const LATENCY = { clicks: 12, bpm: 60, windowMs: 700 } as const;
+
+/** The open chords every intermediate knows, majors then minors. */
+export const CHORD_SET: readonly ChordSpec[] = [
+  { root: 'C', quality: 'major' },
+  { root: 'G', quality: 'major' },
+  { root: 'D', quality: 'major' },
+  { root: 'A', quality: 'major' },
+  { root: 'E', quality: 'major' },
+  { root: 'A', quality: 'minor' },
+  { root: 'E', quality: 'minor' },
+  { root: 'D', quality: 'minor' },
+];
+
+export interface MicLabChordPrompt {
+  part: 'chords';
+  index: number;
+  chord: ChordSpec;
+  symbol: string;
+}
+
+export function micLabChordPrompts(): MicLabChordPrompt[] {
+  return CHORD_SET.map((chord, index) => ({
+    part: 'chords',
+    index,
+    chord,
+    symbol: chordSymbol(chord),
+  }));
+}
 
 export function micLabPrompts(tuning: Tuning = STANDARD_TUNING): MicLabPrompt[] {
   const notes = NOTE_SET.map((p, index) => ({
@@ -77,6 +110,9 @@ export interface MicLabRecord {
   confidence: number | null;
   /** Notes and wrong set: ms from the prompt to the stable note. Latency: ms from the click. */
   ms: number | null;
+  /** Chords part: the chord asked for and the one the detector named. */
+  expectedChord?: string;
+  heardChord?: string | null;
 }
 
 export interface MicLabRun {
@@ -98,6 +134,8 @@ export interface MicLabSummary {
   confirmShare: number | null;
   /** Wrong plays (the fret above) heard as the named note. */
   wrongAccepted: number | null;
+  /** Strummed chords the detector named right / strummed chords it heard at all. */
+  chordsAccepted: number | null;
   /** Prompts where nothing was heard. */
   silent: number;
   medianLatencyMs: number | null;
@@ -132,6 +170,10 @@ export function summarise(records: readonly MicLabRecord[], confirmBelow: number
   const wrongAccepted = wrong.filter((r) =>
     pitchMatches(r.heardMidi as number, r.expectedMidi, 'pitch-class'),
   );
+  const chords = records.filter((r) => r.part === 'chords' && r.heardChord != null);
+  const chordsRight = chords.filter((r) =>
+    sameChord(r.heardChord as string, r.expectedChord as string),
+  );
   const latencies = records
     .filter((r) => r.part === 'latency' && r.ms !== null)
     .map((r) => r.ms as number);
@@ -146,7 +188,10 @@ export function summarise(records: readonly MicLabRecord[], confirmBelow: number
       ? accepted.filter((r) => (r.confidence ?? 0) < confirmBelow).length / accepted.length
       : null,
     wrongAccepted: wrong.length ? wrongAccepted.length / wrong.length : null,
-    silent: records.filter((r) => r.part !== 'latency' && r.heardMidi === null).length,
+    chordsAccepted: chords.length ? chordsRight.length / chords.length : null,
+    silent: records.filter((r) =>
+      r.part === 'chords' ? r.heardChord == null : r.part !== 'latency' && r.heardMidi === null,
+    ).length,
     medianLatencyMs: median(latencies),
     latencySpreadMs: q25 !== null && q75 !== null ? q75 - q25 : null,
     suggestedConfirmBelow:

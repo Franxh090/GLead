@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Fretboard, type FretMarker } from '../vendor/fretfree/fretboard/Fretboard';
-import { midiToFretNote } from '../vendor/fretfree/theory';
+import { chordSymbol, midiToFretNote } from '../vendor/fretfree/theory';
 import { displayPc } from '../vendor/fretfree/theory/pitch-display';
 import { playScript } from '../audio/player';
 import { useApp } from '../core/app-context';
 import { useT } from '../core/i18n';
 import {
   LATENCY,
+  micLabChordPrompts,
   micLabPrompts,
   storableSummary,
   summarise,
@@ -17,7 +18,7 @@ import type { InputAdapter, InputEvent } from '../core/types';
 import styles from '../styles/app.module.css';
 import { getTuning } from '../core/tunings';
 
-type Phase = 'intro' | 'prompts' | 'latency' | 'done';
+type Phase = 'intro' | 'prompts' | 'chords' | 'latency' | 'done';
 
 const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%`);
 
@@ -35,6 +36,9 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
   const PROMPTS = useMemo(() => micLabPrompts(tuning), [tuning]);
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
+  const [chordStep, setChordStep] = useState(0);
+  const CHORDS = useMemo(() => micLabChordPrompts(), []);
+  const chordPrompt = CHORDS[chordStep] ?? null;
   const [records, setRecords] = useState<MicLabRecord[]>([]);
   const [clicks, setClicks] = useState(0);
   const [saved, setSaved] = useState(false);
@@ -56,11 +60,56 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
     () =>
       setStep((st) => {
         const next = st + 1;
-        if (next >= total) setPhase('latency');
+        if (next >= total) setPhase(settings.chordDetection ? 'chords' : 'latency');
         return next;
       }),
-    [total],
+    [total, settings.chordDetection],
   );
+
+  // Chords: the first stable chord after the prompt appeared answers it.
+  useEffect(() => {
+    if (!mic || phase !== 'chords' || !chordPrompt) return;
+    shownAt.current = performance.now();
+    let answered = false;
+    const off = mic.onEvent((e: InputEvent) => {
+      if (answered || !e.chord || e.at < shownAt.current) return;
+      answered = true;
+      record({
+        part: 'chords',
+        index: chordPrompt.index,
+        expectedMidi: 0,
+        heardMidi: null,
+        cents: null,
+        confidence: e.confidence,
+        ms: Math.round(e.at - shownAt.current),
+        expectedChord: chordPrompt.symbol,
+        heardChord: chordSymbol(e.chord),
+      });
+      setChordStep((s) => {
+        if (s + 1 >= CHORDS.length) setPhase('latency');
+        return s + 1;
+      });
+    });
+    return off;
+  }, [mic, phase, chordPrompt, CHORDS.length]);
+  const skipChord = () => {
+    if (!chordPrompt) return;
+    record({
+      part: 'chords',
+      index: chordPrompt.index,
+      expectedMidi: 0,
+      heardMidi: null,
+      cents: null,
+      confidence: null,
+      ms: null,
+      expectedChord: chordPrompt.symbol,
+      heardChord: null,
+    });
+    setChordStep((s) => {
+      if (s + 1 >= CHORDS.length) setPhase('latency');
+      return s + 1;
+    });
+  };
 
   // Prompts: the first stable note after the prompt appeared answers it.
   useEffect(() => {
@@ -178,7 +227,10 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
       <h2>{t('miclab.title')}</h2>
       {phase === 'intro' && (
         <>
-          <p>{t('miclab.intro')}</p>
+          <p>
+            {t('miclab.intro')}
+            {settings.chordDetection ? ` ${t('miclab.introChords')}` : ''}
+          </p>
           <div className={styles.row}>
             {micState !== 'running' ? (
               <button
@@ -247,6 +299,28 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
           </div>
         </>
       )}
+      {phase === 'chords' && chordPrompt && (
+        <>
+          <p className={styles.muted}>
+            {t('miclab.of', {
+              label: t('miclab.chord'),
+              n: chordPrompt.index + 1,
+              total: CHORDS.length,
+            })}
+          </p>
+          <p data-target-chord={chordPrompt.symbol}>
+            {t('miclab.strum', { chord: displayPc(chordPrompt.symbol) })}
+          </p>
+          <div className={styles.row}>
+            <span className={styles.status} role="status">
+              {t('drill.listening')}
+            </span>
+            <button type="button" className={styles.button} onClick={skipChord}>
+              {t('miclab.skip')}
+            </button>
+          </div>
+        </>
+      )}
       {phase === 'latency' && (
         <>
           <p>{t('miclab.clicks', { n: clicks, total: LATENCY.clicks })}</p>
@@ -281,6 +355,12 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                   <th>{t('miclab.rSilent')}</th>
                   <td>{summary.silent}</td>
                 </tr>
+                {summary.chordsAccepted !== null && (
+                  <tr>
+                    <th>{t('miclab.rChords')}</th>
+                    <td>{pct(summary.chordsAccepted)}</td>
+                  </tr>
+                )}
                 <tr>
                   <th>{t('miclab.rLatency')}</th>
                   <td>
@@ -308,12 +388,20 @@ export function MicLabScreen({ onExit }: { onExit(): void }) {
                     <tr key={i}>
                       <td>{r.part}</td>
                       <td>
-                        {r.expectedMidi ? displayPc(midiToFretNote(r.expectedMidi).name) : '—'}
+                        {r.expectedChord
+                          ? displayPc(r.expectedChord)
+                          : r.expectedMidi
+                            ? displayPc(midiToFretNote(r.expectedMidi).name)
+                            : '—'}
                       </td>
                       <td>
-                        {r.heardMidi === null
-                          ? t('miclab.nothing')
-                          : displayPc(midiToFretNote(r.heardMidi).name)}
+                        {r.part === 'chords'
+                          ? r.heardChord
+                            ? displayPc(r.heardChord)
+                            : t('miclab.nothing')
+                          : r.heardMidi === null
+                            ? t('miclab.nothing')
+                            : displayPc(midiToFretNote(r.heardMidi).name)}
                       </td>
                       <td>{r.cents === null ? '' : `${Math.round(r.cents)} c`}</td>
                       <td>{r.confidence === null ? '' : pct(r.confidence)}</td>

@@ -21,6 +21,7 @@ Fork/copy conclusions: all three are MIT-compatible with an MIT GLead repo. The 
 | tonal | MIT | 6.5.1 | github.com/tonaljs/tonal | OK. |
 | **ts-fsrs** | MIT | 5.4.2 | GitHub `LICENSE`: "MIT License, Copyright (c) 2026 Open Spaced Repetition" | OK. (FSRS algorithm itself is unencumbered; the reference implementation is MIT.) |
 | **pitchy** | MIT (as published in the 4.1.0 tarball: `package/LICENSE` = MIT, "Copyright 2018-2021 Ian Johnson") | 4.1.0 | Repo `main` now says **0BSD** (`package.json` `"license": "0BSD"`, LICENSE = zero-clause BSD text, "Copyright Ian Johnson") | Both permissive and MIT-compatible. The published artefact we would depend on is MIT; a future release will be 0BSD (no attribution requirement at all). Keep the MIT notice for 4.x. |
+| workbox-window | MIT | 7.3.0 | github.com/GoogleChrome/workbox (`LICENSE`: MIT, Copyright 2018 Google LLC) | Added in Sprint 11: the client half of the service-worker registration that `vite-plugin-pwa` generates (`virtual:pwa-register/react` imports it). |
 | tone (Tone.js) | MIT | 15.1.22 | github.com/Tonejs/Tone.js | OK. |
 | **dexie** | **Apache-2.0** | 4.4.6 | GitHub `LICENSE` = Apache 2.0 | Apache-2.0 is compatible with an MIT project (one-way: Apache code inside an MIT-licensed app is fine). Requirement: keep the Apache licence text/notices for redistributed Dexie code (normal for a bundled dep; add to third-party notices). Includes an express patent grant, no copyleft. |
 | react | MIT | 19.3.1 | npm repo field now points to `github.com/react/react` | OK. |

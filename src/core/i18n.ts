@@ -299,6 +299,17 @@ const en: Dict = {
   'song.twinkle.title': 'Twinkle, Twinkle (Ah! vous dirai-je, maman)',
   'song.saints.title': 'When the Saints Go Marching In',
   'song.minor-study.title': 'Minor study',
+  'settings.chords': 'Hear chords (experimental): answer chord drills by strumming',
+  'settings.chordsNote':
+    'Chroma templates for major and minor triads, on the same microphone. Below the confirm threshold the app asks, as with notes. The Mic lab measures how well it hears your guitar.',
+  'miclab.chord': 'Chord',
+  'miclab.strum': 'Strum {chord} and let it ring.',
+  'miclab.rChords': 'Strummed chords named right',
+  'miclab.introChords': 'With chord hearing on, 8 strummed chords come after the notes.',
+  'pwa.ready': 'GLead is ready to work offline.',
+  'pwa.update': 'A new version of GLead is ready.',
+  'pwa.reload': 'Reload',
+  'pwa.dismiss': 'Later',
   'progress.cohortTitle': 'Cohort: {n} exports',
   'progress.cohortNote':
     "Each row is one participant's export, read-only; nothing is saved here. Every percentage carries its trial count, and n is small.",
@@ -776,6 +787,18 @@ const es: Dict = {
   'song.twinkle.title': 'Estrellita (Ah! vous dirai-je, maman)',
   'song.saints.title': 'When the Saints Go Marching In',
   'song.minor-study.title': 'Estudio en menor',
+  'settings.chords': 'Oír acordes (experimental): responde a los ejercicios de acordes rasgueando',
+  'settings.chordsNote':
+    'Plantillas de croma para tríadas mayores y menores, con el mismo micrófono. Por debajo del umbral de confirmación la app pregunta, como con las notas. El laboratorio de micro mide cómo oye tu guitarra.',
+  'miclab.chord': 'Acorde',
+  'miclab.strum': 'Rasguea {chord} y déjalo sonar.',
+  'miclab.rChords': 'Acordes rasgueados nombrados bien',
+  'miclab.introChords':
+    'Con la escucha de acordes activa, tras las notas vienen 8 acordes rasgueados.',
+  'pwa.ready': 'GLead está listo para funcionar sin conexión.',
+  'pwa.update': 'Hay una versión nueva de GLead.',
+  'pwa.reload': 'Recargar',
+  'pwa.dismiss': 'Luego',
   'progress.cohortTitle': 'Cohorte: {n} exportaciones',
   'progress.cohortNote':
     'Cada fila es la exportación de una persona, solo lectura; nada se guarda aquí. Cada porcentaje lleva su recuento de intentos, y n es pequeño.',

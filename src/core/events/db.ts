@@ -28,6 +28,8 @@ export interface Settings {
   imagineMs: number;
   guideLevel: GuideLevel;
   micEnabled: boolean;
+  /** Hear strummed chords through chroma templates (Sprint 11, experimental). */
+  chordDetection: boolean;
   soundOn: boolean;
   volume: number;
   /** The learner's experiment arm, drawn once at first run (PRD §6). */
@@ -48,6 +50,7 @@ export const DEFAULT_SETTINGS: Settings = {
   imagineMs: 1200,
   guideLevel: 3,
   micEnabled: false,
+  chordDetection: false,
   soundOn: true,
   volume: 0.8,
   experimentArm: 'default',

@@ -114,6 +114,16 @@ export function SettingsScreen({ onMicLab }: { onMicLab?(): void }) {
           {micCheck && <span className={styles.muted}>{micCheck}</span>}
         </div>
       )}
+      {s.micEnabled && (
+        <>
+          <Toggle
+            label={t('settings.chords')}
+            value={s.chordDetection}
+            onChange={(v) => void app.settings.update({ chordDetection: v })}
+          />
+          <p className={styles.muted}>{t('settings.chordsNote')}</p>
+        </>
+      )}
       <div className={styles.field}>
         <span>{t('settings.confirm', { pct: Math.round(s.confirmBelow * 100) })}</span>
         <input
